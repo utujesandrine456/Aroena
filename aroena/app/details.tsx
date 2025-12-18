@@ -16,7 +16,7 @@ export default function Details() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [date, setDate] = useState(new Date());
   const [showDateModal, setShowDateModal] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showTimeModal, setShowTimeModal] = useState(false);
 
 
   useEffect(() => {
@@ -32,21 +32,6 @@ export default function Details() {
       setLoading(false);
     }
   }, [params.service]);
-
-  const hideTimePicker = () => {
-    setShowTimePicker(false);
-  };
-
-  const handleConfirmTime = (selectedDate) => {
-    if (!selectedDate) return;
-    const updatedDate = new Date(date); // copy existing date
-    updatedDate.setHours(selectedDate.getHours());
-    updatedDate.setMinutes(selectedDate.getMinutes());
-    updatedDate.setSeconds(0); // optional: reset seconds
-    updatedDate.setMilliseconds(0);
-    setDate(updatedDate);
-    hideTimePicker();
-  };
 
 
   const renderStars = (rating) => {
@@ -68,6 +53,18 @@ export default function Details() {
       dates.push(d);
     }
     return dates;
+  };
+
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const hour = h.toString().padStart(2, '0');
+        const minute = m.toString().padStart(2, '0');
+        slots.push(`${hour}:${minute}`);
+      }
+    }
+    return slots;
   };
 
   const handleBookNow = (service) => {
@@ -186,17 +183,12 @@ export default function Details() {
               </Text>
             </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.dateTimeButton}
-                onPress={() => {console.log("Time button pressed"); setShowTimePicker(true)}}
-                disabled={!service.available}
-              >
+              <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimeModal(true)} disabled={!service.available}>
                 <Ionicons name="time-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-                <Text style={styles.dateTimeText}>
+                <Text style={[styles.dateTimeText, !service.available && {color: '#999'}]}>
                   {date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                 </Text>
               </TouchableOpacity>
-
           </View>
 
           <View style={styles.contactSection}>
@@ -240,6 +232,37 @@ export default function Details() {
           </View>
         </View>
       </Modal>
+      
+      <Modal visible={showTimeModal} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Time</Text>
+            <FlatList
+              data={generateTimeSlots()}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => {
+                    const [hour, minute] = item.split(':').map(Number);
+                    const updatedDate = new Date(date);
+                    updatedDate.setHours(hour);
+                    updatedDate.setMinutes(minute);
+                    setDate(updatedDate);
+                    setShowTimeModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity style={styles.modalClose} onPress={() => setShowTimeModal(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
 
       <Animatable.View animation="fadeInUp" delay={400} style={styles.actionContainer}> 
         <TouchableOpacity style={[styles.confirmButton, !service.available && styles.confirmButtonDisabled]} onPress={() => handleBookNow(service)} disabled={!service.available}> 
@@ -247,16 +270,6 @@ export default function Details() {
           <Text style={styles.confirmButtonText}>{service.category === 'Room' ? 'Confirm Booking' : 'Confirm Order'} - {formatMoney(service.price * quantity)} Frw</Text> 
         </TouchableOpacity>
       </Animatable.View>
-
-      <DateTimePickerModal
-        isVisible={showTimePicker}
-        mode="time"
-        onConfirm={handleConfirmTime}
-        onCancel={hideTimePicker}
-        date={date}
-        is24Hour={true}
-        display={Platform.OS === "android" ? "spinner" : "default"} 
-      />
     </View>
   );
 }

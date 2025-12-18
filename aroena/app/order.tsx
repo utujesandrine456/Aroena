@@ -42,16 +42,7 @@ export default function Order() {
   const total = service.price * quantity;
 
   const handlePay = () => {
-    if (!cardName || !cardNumber || !expiry || !cvv) {
-      Alert.alert('Missing info', 'Please fill all payment fields');
-      return;
-    }
-
-    Alert.alert(
-      'Payment Successful',
-      'Your booking has been confirmed!',
-      [{ text: 'OK', onPress: () => router.replace('/') }]
-    );
+    router.push('/payment');
   };
 
   return (
