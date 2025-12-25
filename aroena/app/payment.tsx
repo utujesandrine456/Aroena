@@ -13,17 +13,35 @@ export default function Payment() {
   const router = useRouter();
   const [selected, setSelected] = useState(null);
   const [amount, setAmount] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+
 
   const payments = [
-    { id: 'Card', label: 'Credit / Debit Card', icon: 'card-outline' },
-    { id: 'Momo', label: 'Mobile Money', icon: 'phone-portrait-outline' },
+    { id: 'Momo', label: 'Mobile Money (MoMo)', icon: 'phone-portrait-outline' },
     { id: 'Paypal', label: 'PayPal', icon: 'logo-paypal' },
     { id: 'Cash', label: 'Cash on Delivery', icon: 'cash-outline' },
   ];
 
   const handlePay = ()=> {
-    if(!selected || !amount){
-      Alert.alert('Incomplete', 'Please select a payment method and enter amount');
+    if (!selected) {
+      Alert.alert('Incomplete', 'Please select a payment method');
+      return;
+    }
+
+    if (selected === 'Momo' && (!phone || !amount)) {
+      Alert.alert('Incomplete', 'Enter phone number and amount');
+      return;
+    }
+
+    if (selected === 'Paypal' && (!email || !amount)) {
+      Alert.alert('Incomplete', 'Enter PayPal email and amount');
+      return;
+    }
+
+    if (selected === 'Cash' && (!name || !phone)) {
+      Alert.alert('Incomplete', 'Enter name and phone number');
       return;
     }
 
@@ -36,8 +54,84 @@ export default function Payment() {
     });
   }
 
+  
+  const renderPaymentDetails = () => {
+    if (!selected) return null;
+
+    switch (selected) {
+      case 'Momo':
+        return (
+          <>
+            <Text style={styles.amountLabel}>Phone Number</Text>
+            <TextInput
+              placeholder="07XXXXXXXX"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+              style={styles.amountInput}
+            />
+
+            <Text style={styles.amountLabel}>Amount</Text>
+            <TextInput
+              placeholder="Enter amount"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+              style={styles.amountInput}
+            />
+          </>
+        );
+
+      case 'Paypal':
+        return (
+          <>
+            <Text style={styles.amountLabel}>PayPal Email</Text>
+            <TextInput
+              placeholder="email@example.com"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.amountInput}
+            />
+
+            <Text style={styles.amountLabel}>Amount</Text>
+            <TextInput
+              placeholder="Enter amount"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+              style={styles.amountInput}
+            />
+          </>
+        );
+
+      case 'Cash':
+        return (
+          <>
+            <Text style={styles.amountLabel}>Full Name</Text>
+            <TextInput
+              placeholder="Your name"
+              value={name}
+              onChangeText={setName}
+              style={styles.amountInput}
+            />
+
+            <Text style={styles.amountLabel}>Phone Number</Text>
+            <TextInput
+              placeholder="07XXXXXXXX"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+              style={styles.amountInput}
+            />
+          </>
+        );
+    }
+  };
+
   return (
-    <>
+  <>
+    <View style={{ flex: 1, backgroundColor: '#fff' , marginTop: 30}}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -66,14 +160,7 @@ export default function Payment() {
 
             {selected === item.id && (
               <View style={styles.amountBox}>
-                <Text style={styles.amountLabel}>Enter Amount</Text>
-                <TextInput
-                  placeholder="Enter amount"
-                  keyboardType="numeric"
-                  value={amount}
-                  onChangeText={setAmount}
-                  style={styles.amountInput}
-                />
+                {renderPaymentDetails()}
               </View>
             )}
           </View>
@@ -84,7 +171,8 @@ export default function Payment() {
           <Text style={styles.payText}>Pay Now</Text>
         </TouchableOpacity>
       </ScrollView>
-    </>
+    </View>
+  </>
   );
 }
 

@@ -277,7 +277,7 @@ export default function Details() {
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff', marginTop: 30 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   loadingText: { fontFamily: 'Outfit_400Regular', fontSize: 16, color: '#666', marginTop: 20 },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 20 },

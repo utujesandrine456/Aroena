@@ -71,43 +71,7 @@ export default function Order() {
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Payment Details</Text>
-
-      <View style={styles.inputBox}>
-        <TextInput
-          placeholder="Cardholder Name"
-          value={cardName}
-          onChangeText={setCardName}
-          style={styles.input}
-        />
-
-        <TextInput
-          placeholder="Card Number"
-          value={cardNumber}
-          onChangeText={setCardNumber}
-          keyboardType="numeric"
-          maxLength={16}
-          style={styles.input}
-        />
-
-        <View style={styles.row}>
-          <TextInput
-            placeholder="MM/YY"
-            value={expiry}
-            onChangeText={setExpiry}
-            style={[styles.input, styles.smallInput]}
-          />
-          <TextInput
-            placeholder="CVV"
-            value={cvv}
-            onChangeText={setCvv}
-            keyboardType="numeric"
-            maxLength={3}
-            style={[styles.input, styles.smallInput]}
-          />
-        </View>
-      </View>
-
+      
       <TouchableOpacity style={styles.payButton} onPress={handlePay}>
         <Ionicons name="lock-closed" size={18} color="#fff" />
         <Text style={styles.payText}>
@@ -124,6 +88,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 20,
+    marginTop: 30
   },
   header: {
     flexDirection: 'row',
@@ -149,7 +114,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 320,
   },
   info: {
     padding: 14,

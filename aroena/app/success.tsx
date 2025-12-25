@@ -17,16 +17,19 @@ export default function PaymentSuccess() {
       <Text style={styles.success}>Payment Successful </Text>
       <Text style={styles.method}>Method: {paymentMethod}</Text>
       <Text style={styles.amount}>Amount Paid: {amount} RWF</Text>
-      <TouchableOpacity style={{backgroundColor: '#FF4A1C', marginTop: 40, padding: 15, borderRadius: 15 }} onPress={() => router.push('/')}>
-        <Text style={{ fontSize: 20, color: '#fff', fontFamily: 'Outfit_500Medium' }}>Go Back to Home</Text>
+      <TouchableOpacity style={{backgroundColor: '#FF4A1C', marginTop: 40, padding: 20, borderRadius: 15 }} onPress={() => router.push('/')}>
+        <Text style={{ fontSize: 18, color: '#fff', fontFamily: 'Outfit_500Medium' }}>Go Back to Home</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
+
 const styles = StyleSheet.create({
   container: { flex: 1,  alignItems: 'center', fontFamily: 'Outfit_400Regular', marginBlock: 40},
-  success: { fontSize: 36, fontWeight: 'bold', marginBottom: 10, fontFamily: 'Outfit_500Medium' },
-  method: { fontSize: 24, marginBottom: 5, fontFamily: 'Outfit_400Regular'  },
-  amount: { fontSize: 24, fontFamily: 'Outfit_400Regular' },
+  success: { fontSize: 36, marginBottom: 10, fontFamily: 'Outfit_700Bold' },
+  method: { fontSize: 18, marginBottom: 5, fontFamily: 'Outfit_400Regular'  },
+  amount: { fontSize: 18, fontFamily: 'Outfit_400Regular' },
 });
+
+
