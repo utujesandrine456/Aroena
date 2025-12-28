@@ -53,7 +53,7 @@ export default function Order() {
         serviceId: Number(service.id),
         quantity,
         total: total,
-        date: new Date(),
+        date: service.selectedDate ? new Date(service.selectedDate) : new Date(),
         userId: user.id,
       }
 

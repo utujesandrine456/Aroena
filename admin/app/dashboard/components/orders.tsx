@@ -175,15 +175,6 @@ export default function OrdersPage({ orders }: OrdersProps) {
                 </div>
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                Export
-              </button>
-              <button className="px-4 py-2 text-sm bg-[#FF4A1C] text-white rounded-lg hover:bg-[#FF4A1C]/90">
-                New Order
-              </button>
-            </div>
           </div>
         </div>
       </div>

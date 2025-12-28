@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   ScrollView, Alert, TextInput
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../api';
 
 export default function Payment() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [selected, setSelected] = useState(null);
   const [amount, setAmount] = useState('');
   const [phone, setPhone] = useState('');
@@ -24,7 +26,7 @@ export default function Payment() {
     { id: 'Cash', label: 'Cash on Delivery', icon: 'cash-outline' },
   ];
 
-  const handlePay = ()=> {
+  const handlePay = async () => {
     if (!selected) {
       Alert.alert('Incomplete', 'Please select a payment method');
       return;
@@ -45,16 +47,28 @@ export default function Payment() {
       return;
     }
 
-    router.push({
-      pathname: '/success',
-      params: {
-        paymentMethod: selected,
-        amount: amount,
-      },
-    });
+    try {
+      // Retrieve order details from params if available, otherwise just redirect for now
+      // Ideally we pass orderId in params. Assuming params.orderId exists based on my-orders.tsx
+      const { orderId } = params;
+
+      if (orderId) {
+        await api.put(`/orders/${orderId}/status`, { status: 'PAID' });
+        Alert.alert('Success', 'Payment successful!');
+        router.replace('/my-orders');
+      } else {
+        // Fallback for demo if no order ID
+        Alert.alert('Success', 'Payment successful!');
+        router.push('/success');
+      }
+
+    } catch (error) {
+      console.error('Payment error:', error);
+      Alert.alert('Error', 'Payment failed. Please try again.');
+    }
   }
 
-  
+
   const renderPaymentDetails = () => {
     if (!selected) return null;
 
@@ -130,49 +144,48 @@ export default function Payment() {
   };
 
   return (
-  <>
-    <View style={{ flex: 1, backgroundColor: '#fff' , marginTop: 30}}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Payment Method</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <>
+      <View style={{ flex: 1, backgroundColor: '#fff', marginTop: 30 }}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Payment Method</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        {payments.map(item => (
-          <View>
-            <TouchableOpacity
-              key={item.id}
-              style={[styles.card, selected === item.id && styles.cardActive ]}
-              onPress={() => setSelected(item.id)} >
-              <Ionicons
-                name={item.icon as any}
-                size={26}
-                color={selected === item.id ? '#FF4A1C' : '#555'}
-              />
-              <Text style={styles.cardText}>{item.label}</Text>
+        <ScrollView contentContainerStyle={styles.container}>
+          {payments.map(item => (
+            <View key={item.id}>
+              <TouchableOpacity
+                style={[styles.card, selected === item.id && styles.cardActive]}
+                onPress={() => setSelected(item.id)} >
+                <Ionicons
+                  name={item.icon as any}
+                  size={26}
+                  color={selected === item.id ? '#FF4A1C' : '#555'}
+                />
+                <Text style={styles.cardText}>{item.label}</Text>
+                {selected === item.id && (
+                  <Ionicons name="checkmark-circle" size={22} color="#FF4A1C" />
+                )}
+              </TouchableOpacity>
+
               {selected === item.id && (
-                <Ionicons name="checkmark-circle" size={22} color="#FF4A1C" />
+                <View style={styles.amountBox}>
+                  {renderPaymentDetails()}
+                </View>
               )}
-            </TouchableOpacity>
+            </View>
+          ))}
 
-            {selected === item.id && (
-              <View style={styles.amountBox}>
-                {renderPaymentDetails()}
-              </View>
-            )}
-          </View>
-        ))}
 
-        
-        <TouchableOpacity style={styles.payButton} onPress={handlePay}>
-          <Text style={styles.payText}>Pay Now</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
-  </>
+          <TouchableOpacity style={styles.payButton} onPress={handlePay}>
+            <Text style={styles.payText}>Pay Now</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </>
   );
 }
 
