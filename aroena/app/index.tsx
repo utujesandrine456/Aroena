@@ -7,19 +7,42 @@ import {
   Dimensions,
   TouchableOpacity,
   Modal,
-  TextInput,
+  TextInput, Alert
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-
+import api from '../api';
 const { width, height } = Dimensions.get('window');
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+
+  const createUser = async () => {
+    if(!name || !phone){
+      Alert.alert('Please fill in all fields');
+      return;
+    }
+
+    try{
+      const res = await api.post('/users/login-or-signup', {name, phone});
+      const user = res.data;
+
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+
+      setName('');
+      setPhone('');
+      setShowForm(false);
+      router.push('/bookchoice');
+    }catch(error){
+      console.error(error);
+      Alert.alert('Error creating user. Please try again');
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -38,7 +61,6 @@ export default function Home() {
             Book your stay effortlessly and enjoy a comfortable, memorable experience.
           </Text>
 
-          {/* FIRST BOOK NOW */}
           <TouchableOpacity
             style={styles.button}
             activeOpacity={0.8}
@@ -82,10 +104,7 @@ export default function Home() {
 
               <TouchableOpacity
                 style={styles.formButton}
-                onPress={() => {
-                  setShowForm(false);
-                  router.push('/bookchoice');
-                }}
+                onPress={createUser}
                 activeOpacity={0.9}
               >
                 <Text style={styles.formButtonText}>Book Now</Text>

@@ -1,0 +1,35 @@
+{
+  "name": "admin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@nestjs/platform-express": "^11.1.10",
+    "@nestjs/serve-static": "^5.0.4",
+    "axios": "^1.13.2",
+    "lucide-react": "^0.562.0",
+    "multer": "^2.0.2",
+    "next": "16.1.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "zustand": "^5.0.9"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.1",
+    "tailwindcss": "^4",
+    "tailwindcss-gradients": "^3.0.0",
+    "typescript": "^5"
+  }
+}

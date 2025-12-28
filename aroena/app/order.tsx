@@ -5,12 +5,13 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  TextInput,
   Alert,
   ScrollView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../api';
 
 export default function Order() {
   const router = useRouter();
@@ -18,11 +19,6 @@ export default function Order() {
 
   const [service, setService] = useState<any>(null);
   const [quantity, setQuantity ] = useState(Number(params.quantity || 1));
-
-  const [cardName, setCardName] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
 
   useEffect(() => {
     if (params.service) {
@@ -41,9 +37,36 @@ export default function Order() {
 
   const total = service.price * quantity;
 
-  const handlePay = () => {
-    router.push('/payment');
+  const handlePay = async() => {
+    if(!service || quantity < 1) return;
+
+    try{
+      const userData = await AsyncStorage.getItem('user');
+
+      if(!userData){
+        Alert.alert('Please log in first');
+        return;
+      }
+      const user = JSON.parse(userData);
+
+      const orderData = {
+        serviceId: Number(service.id),
+        quantity,
+        total: total,
+        date : new Date(),
+        userId: user.id,
+      }
+
+      await api.post('/orders', orderData);
+      Alert.alert('Success', 'Your order has been registered !!!');
+      router.push('/payment');
+    }catch(error){
+      console.error(error);
+      Alert.alert('Error', 'Failed to create order. Please try again.');
+    }
   };
+
+
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
