@@ -1,6 +1,6 @@
 'use client';
 
-import { Order } from '@/lib/api';
+import { Order, api } from '@/lib/api';
 import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 interface OrdersProps {
@@ -8,32 +8,32 @@ interface OrdersProps {
 }
 
 export default function OrdersPage({ orders }: OrdersProps) {
-  const statusConfig: Record<string, { 
-    bg: string, 
-    text: string, 
+  const statusConfig: Record<string, {
+    bg: string,
+    text: string,
     icon: React.ReactNode,
-    dot: string 
+    dot: string
   }> = {
-    pending: { 
-      bg: 'bg-amber-50', 
+    pending: {
+      bg: 'bg-amber-50',
       text: 'text-amber-800',
       icon: <Clock className="w-4 h-4" />,
       dot: 'bg-amber-500'
     },
-    processing: { 
-      bg: 'bg-blue-50', 
+    processing: {
+      bg: 'bg-blue-50',
       text: 'text-blue-800',
       icon: <AlertCircle className="w-4 h-4" />,
       dot: 'bg-blue-500'
     },
-    completed: { 
-      bg: 'bg-emerald-50', 
+    completed: {
+      bg: 'bg-emerald-50',
       text: 'text-emerald-800',
       icon: <CheckCircle className="w-4 h-4" />,
       dot: 'bg-emerald-500'
     },
-    cancelled: { 
-      bg: 'bg-red-50', 
+    cancelled: {
+      bg: 'bg-red-50',
       text: 'text-red-800',
       icon: <XCircle className="w-4 h-4" />,
       dot: 'bg-red-500'
@@ -46,7 +46,7 @@ export default function OrdersPage({ orders }: OrdersProps) {
         <h1 className="text-xl font-bold text-gray-800">Order Management</h1>
         <p className="text-sm text-gray-500 mt-1">Track and manage all customer orders</p>
       </div>
-      
+
       <div className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -64,11 +64,22 @@ export default function OrdersPage({ orders }: OrdersProps) {
               {orders.map((order: Order) => {
                 const status = order.status.toLowerCase();
                 const statusInfo = statusConfig[status] || statusConfig.pending;
-                
+
+                const handleStatusUpdate = async (newStatus: 'APPROVED' | 'REJECTED') => {
+                  if (!confirm(`Are you sure you want to ${newStatus.toLowerCase()} this order?`)) return;
+                  try {
+                    await api.updateOrderStatus(order.id, newStatus);
+                    window.location.reload();
+                  } catch (error) {
+                    console.error('Failed to update status:', error);
+                    alert('Failed to update status');
+                  }
+                };
+
                 return (
-                  <tr 
-                    key={order.id} 
-                    className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                  <tr
+                    key={order.id}
+                    className="hover:bg-gray-50 transition-colors duration-150"
                   >
                     <td className="px-6 py-4">
                       <div>
@@ -88,7 +99,7 @@ export default function OrdersPage({ orders }: OrdersProps) {
                       <div className="text-sm font-medium text-gray-900">{order.quantity}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-bold text-[#FF4A1C]">${order.total.toFixed(2)}</div>
+                      <div className="text-sm font-bold text-[#FF4A1C]">{order.total.toFixed(2)} Frw</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
@@ -98,6 +109,28 @@ export default function OrdersPage({ orders }: OrdersProps) {
                           {order.status}
                         </span>
                       </div>
+                      {status === 'pending' && (
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusUpdate('APPROVED');
+                            }}
+                            className="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors cursor-pointer"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusUpdate('REJECTED');
+                            }}
+                            className="px-3 py-1 bg-red-500 text-white text-xs font-medium rounded shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors cursor-pointer"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
@@ -120,7 +153,7 @@ export default function OrdersPage({ orders }: OrdersProps) {
             </tbody>
           </table>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -142,7 +175,7 @@ export default function OrdersPage({ orders }: OrdersProps) {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                 Export

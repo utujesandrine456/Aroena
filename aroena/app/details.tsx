@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, FlatList, Platform } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { API_URL } from '../api';
 
 const formatMoney = (amount) => amount.toLocaleString('en-RW');
 
@@ -68,7 +69,7 @@ export default function Details() {
   };
 
   const handleBookNow = (service) => {
-    router.push(`/order?service=${encodeURIComponent(JSON.stringify({...service, quantity, selectedDate: date.toISOString()}))}`);
+    router.push(`/order?service=${encodeURIComponent(JSON.stringify({ ...service, quantity, selectedDate: date.toISOString() }))}`);
   };
 
   const handleCall = () => Linking.openURL('tel:+250788123456');
@@ -115,7 +116,7 @@ export default function Details() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <Animatable.View animation="fadeIn" style={styles.imageContainer}>
-          <Image source={service.image} style={styles.image} />
+          <Image source={{ uri: `${API_URL}${service.image}` }} style={styles.image} />
           <View style={styles.ratingContainer}>
             <View style={styles.ratingBadge}>
               {renderStars(service.rating)}
@@ -178,17 +179,17 @@ export default function Details() {
             <Text style={styles.sectionTitle}>Select Date & Time</Text>
             <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDateModal(true)} disabled={!service.available}>
               <Ionicons name="calendar-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-              <Text style={[styles.dateTimeText, !service.available && {color: '#999'}]}>
+              <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
                 {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
               </Text>
             </TouchableOpacity>
 
-              <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimeModal(true)} disabled={!service.available}>
-                <Ionicons name="time-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-                <Text style={[styles.dateTimeText, !service.available && {color: '#999'}]}>
-                  {date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
-                </Text>
-              </TouchableOpacity>
+            <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimeModal(true)} disabled={!service.available}>
+              <Ionicons name="time-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
+              <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
+                {date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.contactSection}>
@@ -232,7 +233,7 @@ export default function Details() {
           </View>
         </View>
       </Modal>
-      
+
       <Modal visible={showTimeModal} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -264,10 +265,10 @@ export default function Details() {
       </Modal>
 
 
-      <Animatable.View animation="fadeInUp" delay={400} style={styles.actionContainer}> 
-        <TouchableOpacity style={[styles.confirmButton, !service.available && styles.confirmButtonDisabled]} onPress={() => handleBookNow(service)} disabled={!service.available}> 
-          <Ionicons name={service.category === 'Room' ? 'bed' : 'fast-food'} size={24} color="#fff" /> 
-          <Text style={styles.confirmButtonText}>{service.category === 'Room' ? 'Confirm Booking' : 'Confirm Order'} - {formatMoney(service.price * quantity)} Frw</Text> 
+      <Animatable.View animation="fadeInUp" delay={400} style={styles.actionContainer}>
+        <TouchableOpacity style={[styles.confirmButton, !service.available && styles.confirmButtonDisabled]} onPress={() => handleBookNow(service)} disabled={!service.available}>
+          <Ionicons name={service.category === 'Room' ? 'bed' : 'fast-food'} size={24} color="#fff" />
+          <Text style={styles.confirmButtonText}>{service.category === 'Room' ? 'Confirm Booking' : 'Confirm Order'} - {formatMoney(service.price * quantity)} Frw</Text>
         </TouchableOpacity>
       </Animatable.View>
     </View>

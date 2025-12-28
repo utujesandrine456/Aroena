@@ -23,13 +23,13 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     features: [] as string[],
   });
   const [featureInput, setFeatureInput] = useState('');
-
   const categories = ['Room', 'Food'];
 
   const getImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `${API_URL}${url}`;
+    if (url.startsWith('/uploads')) return `${API_URL}${url}`;
+    return `${API_URL}/uploads/services/${url}`;
   };
 
 
@@ -206,6 +206,9 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
                     src={getImageUrl(service.image)}
                     alt={service.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-gray-100 to-gray-200">
@@ -264,7 +267,6 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1">
-                      <DollarSign className="w-4 h-4 text-gray-400" />
                       <span className="text-lg font-bold text-[#FF4A1C]">{service.price.toFixed(2)} Frw</span>
                     </div>
                     <div className="flex items-center gap-1">

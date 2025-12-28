@@ -11,14 +11,14 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../api';
+import api, { API_URL } from '../api';
 
 export default function Order() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
   const [service, setService] = useState<any>(null);
-  const [quantity, setQuantity ] = useState(Number(params.quantity || 1));
+  const [quantity, setQuantity] = useState(Number(params.quantity || 1));
 
   useEffect(() => {
     if (params.service) {
@@ -37,13 +37,13 @@ export default function Order() {
 
   const total = service.price * quantity;
 
-  const handlePay = async() => {
-    if(!service || quantity < 1) return;
+  const handlePay = async () => {
+    if (!service || quantity < 1) return;
 
-    try{
+    try {
       const userData = await AsyncStorage.getItem('user');
 
-      if(!userData){
+      if (!userData) {
         Alert.alert('Please log in first');
         return;
       }
@@ -53,14 +53,14 @@ export default function Order() {
         serviceId: Number(service.id),
         quantity,
         total: total,
-        date : new Date(),
+        date: new Date(),
         userId: user.id,
       }
 
       await api.post('/orders', orderData);
-      Alert.alert('Success', 'Your order has been registered !!!');
-      router.push('/payment');
-    }catch(error){
+      Alert.alert('Success', 'Your order has been placed successfully! Please wait for admin approval.');
+      router.push('/my-orders');
+    } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Failed to create order. Please try again.');
     }
@@ -71,7 +71,7 @@ export default function Order() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={{backgroundColor: '#FF4A1C', padding: 10, borderRadius: 30}}>
+        <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: '#FF4A1C', padding: 10, borderRadius: 30 }}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Order & Payment</Text>
@@ -80,7 +80,7 @@ export default function Order() {
       <Text style={styles.sectionTitle}>Booking Summary</Text>
 
       <View style={styles.card}>
-        <Image source={service.image} style={styles.image} />
+        <Image source={{ uri: `${API_URL}${service.image}` }} style={styles.image} />
 
         <View style={styles.info}>
           <Text style={styles.title}>{service.title}</Text>
@@ -94,11 +94,11 @@ export default function Order() {
         </View>
       </View>
 
-      
+
       <TouchableOpacity style={styles.payButton} onPress={handlePay}>
-        <Ionicons name="lock-closed" size={18} color="#fff" />
+        <Ionicons name="cart" size={18} color="#fff" />
         <Text style={styles.payText}>
-          Pay {total.toLocaleString()} RWF
+          Place Order - {total.toLocaleString()} RWF
         </Text>
       </TouchableOpacity>
     </ScrollView>

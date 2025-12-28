@@ -184,6 +184,11 @@ class ApiClient {
     await this.api.delete(`/orders/${id}`);
   }
 
+  async updateOrderStatus(id: number, status: 'APPROVED' | 'REJECTED'): Promise<Order> {
+    const res = await this.api.put(`/orders/${id}/status`, { status });
+    return res.data;
+  }
+
   // ================= Services =================
   async getServices(): Promise<Service[]> {
     const res = await this.api.get('/services');
