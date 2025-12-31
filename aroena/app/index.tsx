@@ -23,13 +23,13 @@ export default function Home() {
   const [phone, setPhone] = useState('');
 
   const createUser = async () => {
-    if(!name || !phone){
+    if (!name || !phone) {
       Alert.alert('Please fill in all fields');
       return;
     }
 
-    try{
-      const res = await api.post('/users/login-or-signup', {name, phone});
+    try {
+      const res = await api.post('/users/login-or-signup', { name, phone });
       const user = res.data;
 
       await AsyncStorage.setItem('user', JSON.stringify(user));
@@ -38,7 +38,7 @@ export default function Home() {
       setPhone('');
       setShowForm(false);
       router.push('/bookchoice');
-    }catch(error){
+    } catch (error) {
       console.error(error);
       Alert.alert('Error creating user. Please try again');
     }

@@ -48,9 +48,8 @@ export default function Payment() {
     }
 
     try {
-      // Retrieve order details from params if available, otherwise just redirect for now
-      // Ideally we pass orderId in params. Assuming params.orderId exists based on my-orders.tsx
-      const { orderId } = params;
+   
+     const { orderId } = params;
 
       if (orderId) {
         await api.put(`/orders/${orderId}/status`, { status: 'PAID' });
