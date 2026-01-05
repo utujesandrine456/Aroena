@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_URL = 'http://192.168.1.5:2009';
+export const API_URL = 'https://aroena.onrender.com/';
 
 export interface Service {
   id: number;
