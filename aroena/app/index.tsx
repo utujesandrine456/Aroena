@@ -7,7 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Modal,
-  TextInput, Alert
+  TextInput, Alert, ActivityIndicator
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { BlurView } from 'expo-blur';
@@ -21,6 +21,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const createUser = async () => {
     if (!name || !phone) {
@@ -28,6 +29,7 @@ export default function Home() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const res = await api.post('/users/login-or-signup', { name, phone });
       const user = res.data;
@@ -37,8 +39,10 @@ export default function Home() {
       setName('');
       setPhone('');
       setShowForm(false);
+      setIsLoading(false);
       router.push('/bookchoice');
     } catch (error) {
+      setIsLoading(false);
       console.error(error);
       Alert.alert('Error creating user. Please try again');
     }
@@ -113,6 +117,20 @@ export default function Home() {
               <TouchableOpacity onPress={() => setShowForm(false)}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
+            </Animatable.View>
+          </View>
+        </Modal>
+
+        <Modal visible={isLoading} transparent animationType="fade">
+          <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
+          <View style={styles.loadingContainer}>
+            <Animatable.View
+              animation="zoomIn"
+              duration={500}
+              style={styles.loadingCard}
+            >
+              <ActivityIndicator size="large" color="#FF4A1C" />
+              <Text style={styles.loadingText}>Processing...</Text>
             </Animatable.View>
           </View>
         </Modal>
@@ -222,5 +240,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Outfit_500Medium',
   },
-
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 30,
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 18,
+    fontFamily: 'Outfit_500Medium',
+    color: '#333',
+  },
 });

@@ -14,7 +14,7 @@ export default function Payment() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [selected, setSelected] = useState(null);
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(params.amount as string || '');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -67,7 +67,6 @@ export default function Payment() {
           }
         });
       } else {
-        // Fallback for demo if no order ID
         Alert.alert('Success', 'Payment successful!');
         router.push('/success');
       }
@@ -155,7 +154,7 @@ export default function Payment() {
 
   return (
     <>
-      <View style={{ flex: 1, backgroundColor: '#fff', marginTop: 30 }}>
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#fff" />

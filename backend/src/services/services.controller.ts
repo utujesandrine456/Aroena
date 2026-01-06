@@ -73,17 +73,46 @@ export class ServicesController {
             imageUrl = upload.secure_url;
         }
 
-        const data = {
-            ...body,
-            price: body.price ? Number(body.price) : undefined,
-            rating: body.rating ? Number(body.rating) : undefined,
-            available: body.available !== undefined ? body.available === 'true' : undefined,
-            features: body.features ? JSON.parse(body.features) : undefined,
-            image: imageUrl,
-        };
+        const { id: _, category, ...updateData } = body;
+
+        const data: any = {};
+
+        if (body.title !== undefined) data.title = body.title;
+        if (body.description !== undefined) data.description = body.description;
+        if (body.category !== undefined) data.category = body.category;
+
+        if (body.price !== undefined) {
+            const priceNum = Number(body.price);
+            if (!isNaN(priceNum)) data.price = priceNum;
+        }
+
+        if (body.rating !== undefined) {
+            const ratingNum = Number(body.rating);
+            if (!isNaN(ratingNum)) data.rating = ratingNum;
+        }
+
+        if (body.available !== undefined) {
+            data.available = body.available === 'true' || body.available === true;
+        }
+
+        if (body.features !== undefined) {
+            try {
+                data.features = typeof body.features === 'string'
+                    ? JSON.parse(body.features)
+                    : body.features;
+            } catch (e) {
+                console.warn('Failed to parse features JSON, using as is');
+                data.features = body.features;
+            }
+        }
+
+        data.image = imageUrl;
+        delete (data as any).id;
+        Object.keys(data).forEach(key => (data as any)[key] === undefined && delete (data as any)[key]);
 
         return this.servicesService.update(Number(id), data);
     }
+
 
     @UseGuards(JwtAuthGuard)
     @Delete(':id')

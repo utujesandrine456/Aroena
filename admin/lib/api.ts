@@ -215,13 +215,16 @@ class ApiClient {
 
 
   async updateService(id: number, data: Partial<Service>): Promise<Service> {
-    const res = await this.api.put(`/services/${id}`, data);
+    const { orders, id:_, ...updateData } = data as any;
+    const res = await this.api.put(`/services/${id}`, updateData);
+    
     return res.data;
   }
 
   async deleteService(id: number): Promise<void> {
     await this.api.delete(`/services/${id}`);
   }
+
 
   // ================= Users =================
   async getUsers(): Promise<User[]> {

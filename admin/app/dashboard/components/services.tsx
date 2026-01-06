@@ -28,7 +28,6 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
   const getImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
-    // Handle legacy local uploads
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
     return `${API_URL}${cleanPath}`;
   };

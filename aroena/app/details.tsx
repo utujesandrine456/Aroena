@@ -36,7 +36,7 @@ export default function Details() {
   const getServiceImageUrl = (imagePath) => {
     if (!imagePath) return 'https://via.placeholder.com/400x300?text=No+Image';
     if (imagePath.startsWith('http')) return imagePath;
-    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${API_URL}${cleanPath}`;
   };
 
@@ -281,14 +281,14 @@ export default function Details() {
           <Text style={styles.confirmButtonText}>{service.category === 'Room' ? 'Confirm Booking' : 'Confirm Order'} - {formatMoney(service.price * quantity)} Frw</Text>
         </TouchableOpacity>
       </Animatable.View>
-    </View>
+    </View >
   );
 }
 
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', marginTop: 30 },
+  container: { flex: 1, backgroundColor: '#fff' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   loadingText: { fontFamily: 'Outfit_400Regular', fontSize: 16, color: '#666', marginTop: 20 },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 20 },

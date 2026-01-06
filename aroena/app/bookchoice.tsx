@@ -103,10 +103,8 @@ export default function BookChoice() {
   };
 
   const getServiceImageUrl = (imagePath: string) => {
-    if (!imagePath) return 'https://via.placeholder.com/400x300?text=No+Image';
     if (imagePath.startsWith('http')) return imagePath;
-    // Remove leading slash if present to avoid double slashes with API_URL which ends with slash
-    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${API_URL}${cleanPath}`;
   };
 

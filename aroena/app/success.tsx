@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function PaymentSuccess() {
   const { amount, paymentMethod } = useLocalSearchParams();
+  const displayAmount = Array.isArray(amount) ? amount[0] : amount || '0';
 
   return (
     <View style={styles.container}>
@@ -16,7 +17,7 @@ export default function PaymentSuccess() {
       </View>
       <Text style={styles.success}>Payment Successful </Text>
       <Text style={styles.method}>Method: {paymentMethod}</Text>
-      <Text style={styles.amount}>Amount Paid: {amount} RWF</Text>
+      <Text style={styles.amount}>Amount Paid: {displayAmount} RWF</Text>
       <TouchableOpacity style={{ backgroundColor: '#FF4A1C', marginTop: 40, padding: 20, borderRadius: 15 }} onPress={() => router.push('/bookchoice')}>
         <Text style={{ fontSize: 18, color: '#fff', fontFamily: 'Outfit_500Medium' }}>Book More Services</Text>
       </TouchableOpacity>
