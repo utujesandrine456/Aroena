@@ -85,10 +85,15 @@ export class OrdersService {
         });
     }
 
-    delete(id: number) {
-        return this.prisma.order.delete({
-            where: { id },
-        })
+    async delete(id: number) {
+        try {
+            return await this.prisma.order.delete({
+                where: { id },
+            });
+        } catch (error) {
+            console.error(`Error deleting order ${id}:`, error);
+            throw error;
+        }
     }
 }
 

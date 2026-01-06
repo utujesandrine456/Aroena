@@ -4,37 +4,38 @@ import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from 'src/auth/admin/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import type { Express } from 'express';
 
 
 @Controller('services')
 export class ServicesController {
-    constructor(private readonly servicesService: ServicesService) { }
+    constructor(
+        private readonly servicesService: ServicesService,
+        private readonly cloudinaryService: CloudinaryService,
+    ) { }
 
     @UseGuards(JwtAuthGuard)
     @Post()
-    @UseInterceptors(FileInterceptor('image', {
-        storage: diskStorage({
-            destination: './uploads/services',
-            filename: (_, file, cb) => {
-                const name = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                cb(null, `${name}${extname(file.originalname)}`);
-            },
-        }),
-    }))
+    @UseInterceptors(FileInterceptor('image'))
     async create(
         @Body() body: any,
         @UploadedFile() file: Express.Multer.File,
     ) {
+        let imageUrl = body.image || '';
+
+        if (file) {
+            const upload = await this.cloudinaryService.uploadImage(file);
+            imageUrl = upload.secure_url;
+        }
+
         const data = {
             ...body,
             price: Number(body.price),
             rating: Number(body.rating || 0),
             available: body.available === 'true',
             features: JSON.parse(body.features || '[]'),
-            image: `/uploads/services/${file.filename}`,
+            image: imageUrl,
         };
 
         return this.servicesService.create(data);
@@ -54,7 +55,33 @@ export class ServicesController {
 
     @UseGuards(JwtAuthGuard)
     @Put(':id')
-    update(@Param('id') id: string, @Body() data: UpdateServiceDto) {
+    @UseInterceptors(FileInterceptor('image'))
+    async update(
+        @Param('id') id: string,
+        @Body() body: any,
+        @UploadedFile() file: Express.Multer.File,
+    ) {
+        const existingService = await this.servicesService.findOne(Number(id));
+        if (!existingService) {
+            throw new Error('Service not found');
+        }
+
+        let imageUrl = body.image || existingService.image;
+
+        if (file) {
+            const upload = await this.cloudinaryService.uploadImage(file);
+            imageUrl = upload.secure_url;
+        }
+
+        const data = {
+            ...body,
+            price: body.price ? Number(body.price) : undefined,
+            rating: body.rating ? Number(body.rating) : undefined,
+            available: body.available !== undefined ? body.available === 'true' : undefined,
+            features: body.features ? JSON.parse(body.features) : undefined,
+            image: imageUrl,
+        };
+
         return this.servicesService.update(Number(id), data);
     }
 
