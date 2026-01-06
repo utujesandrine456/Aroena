@@ -26,7 +26,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
   const categories = ['Room', 'Food'];
 
   const getImageUrl = (url: string) => {
-    if (!url) return '';
+    if (!url) return 'https://placehold.co/400x300?text=No+Image';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
     return `${API_URL}${cleanPath}`;

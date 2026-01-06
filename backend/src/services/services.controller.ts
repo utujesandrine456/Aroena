@@ -29,14 +29,28 @@ export class ServicesController {
             imageUrl = upload.secure_url;
         }
 
-        const data = {
-            ...body,
+        const data: any = {
+            title: body.title,
+            description: body.description,
+            category: body.category,
             price: Number(body.price),
             rating: Number(body.rating || 0),
-            available: body.available === 'true',
-            features: JSON.parse(body.features || '[]'),
+            available: body.available === 'true' || body.available === true,
             image: imageUrl,
         };
+
+        if (body.features) {
+            try {
+                data.features = typeof body.features === 'string'
+                    ? JSON.parse(body.features)
+                    : body.features;
+            } catch (e) {
+                console.warn('Failed to parse features JSON in create');
+                data.features = [];
+            }
+        } else {
+            data.features = [];
+        }
 
         return this.servicesService.create(data);
     }

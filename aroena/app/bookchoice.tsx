@@ -103,6 +103,7 @@ export default function BookChoice() {
   };
 
   const getServiceImageUrl = (imagePath: string) => {
+    if (!imagePath) return 'https://placehold.co/400x300?text=No+Image';
     if (imagePath.startsWith('http')) return imagePath;
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${API_URL}${cleanPath}`;
