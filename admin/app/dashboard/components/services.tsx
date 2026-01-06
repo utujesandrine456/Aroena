@@ -28,8 +28,11 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
   const getImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
-    if (url.startsWith('/uploads')) return `${API_URL}${url}`;
-    return `${API_URL}/uploads/services/${url}`;
+    const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+    if (cleanPath.startsWith('uploads')) {
+      return `${API_URL}${cleanPath}`;
+    }
+    return `${API_URL}uploads/services/${cleanPath}`;
   };
 
 
