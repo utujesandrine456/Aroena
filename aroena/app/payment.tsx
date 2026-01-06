@@ -48,13 +48,24 @@ export default function Payment() {
     }
 
     try {
-   
-     const { orderId } = params;
+
+      const { orderId } = params;
 
       if (orderId) {
-        await api.put(`/orders/${orderId}/status`, { status: 'PAID' });
+        const orderIds = (orderId as string).split(',');
+
+        for (const id of orderIds) {
+          await api.put(`/orders/${id}/status`, { status: 'PAID' });
+        }
+
         Alert.alert('Success', 'Payment successful!');
-        router.replace('/my-orders');
+        router.push({
+          pathname: '/success',
+          params: {
+            amount: amount,
+            paymentMethod: selected
+          }
+        });
       } else {
         // Fallback for demo if no order ID
         Alert.alert('Success', 'Payment successful!');

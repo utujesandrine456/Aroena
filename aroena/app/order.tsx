@@ -66,7 +66,12 @@ export default function Order() {
     }
   };
 
-
+  const getServiceImageUrl = (imagePath: string) => {
+    if (!imagePath) return 'https://via.placeholder.com/400x300?text=No+Image';
+    if (imagePath.startsWith('http')) return imagePath;
+    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    return `${API_URL}${cleanPath}`;
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -76,11 +81,9 @@ export default function Order() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Order & Payment</Text>
       </View>
-
       <Text style={styles.sectionTitle}>Booking Summary</Text>
-
       <View style={styles.card}>
-        <Image source={{ uri: `${API_URL}${service.image}` }} style={styles.image} />
+        <Image source={{ uri: getServiceImageUrl(service.image) }} style={styles.image} />
 
         <View style={styles.info}>
           <Text style={styles.title}>{service.title}</Text>
@@ -111,7 +114,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 20,
-    marginTop: 30
   },
   header: {
     flexDirection: 'row',
