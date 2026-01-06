@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -17,8 +17,13 @@ export class OrdersController {
 
     @UseGuards(JwtAuthGuard)
     @Get()
-    findAll() {
-        return this.ordersService.findAll();
+    async findAll() {
+        try {
+            return await this.ordersService.findAll();
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            throw new HttpException(error.message || 'Failed to fetch orders', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Get('user/:userId')

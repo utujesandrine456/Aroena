@@ -47,25 +47,25 @@ export default function BookChoice() {
   const router = useRouter();
 
 
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching services...');
+      const res = await api.get('/services');
+      console.log('Services fetched:', JSON.stringify(res.data, null, 2));
+
+      const data = res.data as Service[];
+
+      setServices(data);
+      setFilteredServices(data);
+    } catch (err) {
+      console.error('Error fetching services:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        setLoading(true);
-        console.log('Fetching services...');
-        const res = await api.get('/services');
-        console.log('Services fetched:', JSON.stringify(res.data, null, 2));
-
-        const data = res.data as Service[];
-
-        setServices(data);
-        setFilteredServices(data);
-      } catch (err) {
-        console.error('Error fetching services:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchServices();
   }, []);
 
@@ -102,10 +102,31 @@ export default function BookChoice() {
     router.push(`/details?service=${encodeURIComponent(JSON.stringify(service))}`);
   };
 
+  const getServiceImageUrl = (imagePath: string) => {
+    if (!imagePath) return 'https://via.placeholder.com/400x300?text=No+Image';
+    if (imagePath.startsWith('http')) return imagePath;
+    // Remove leading slash if present to avoid double slashes with API_URL which ends with slash
+    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    return `${API_URL}${cleanPath}`;
+  };
+
   return (
     <View style={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800} style={styles.header}>
-        <Text style={styles.title}>Aroena</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.title}>Aroena</Text>
+          <TouchableOpacity
+            style={styles.reloadButton}
+            onPress={fetchServices}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="reload" size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
           <TextInput
@@ -153,7 +174,7 @@ export default function BookChoice() {
           filteredServices.map((service, idx) => (
             <Animatable.View key={service.id} animation="fadeInUp" delay={300 + idx * 100} style={styles.serviceCard}>
               <View style={styles.imageContainer}>
-                <Image source={{ uri: `${API_URL}${service.image}` }} style={styles.serviceImage} />
+                <Image source={{ uri: getServiceImageUrl(service.image) }} style={styles.serviceImage} />
                 {!service.available && <View style={styles.unavailableOverlay}><Text style={styles.unavailableText}>Unavailable</Text></View>}
                 <View style={styles.ratingBadge}>{renderStars(service.rating)}<Text style={styles.ratingText}>{service.rating}</Text></View>
                 <TouchableOpacity style={styles.heartButton}><Ionicons name="heart-outline" size={24} color="#fff" /></TouchableOpacity>
@@ -196,7 +217,23 @@ export default function BookChoice() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 16 },
   header: { marginTop: 20, marginBottom: 20 },
-  title: { fontFamily: 'Satisfy_400Regular', fontSize: 42, color: '#FF4A1C', textAlign: 'center', marginBottom: 20 },
+  headerTop: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20, position: 'relative' },
+  title: { fontFamily: 'Satisfy_400Regular', fontSize: 42, color: '#FF4A1C', textAlign: 'center' },
+  reloadButton: {
+    position: 'absolute',
+    right: 0,
+    backgroundColor: '#FF4A1C',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4
+  },
   searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8f8f8', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1, borderColor: '#e0e0e0' },
   searchIcon: { marginRight: 10 },
   searchInput: { flex: 1, paddingVertical: 14, color: '#333', fontFamily: 'Outfit_400Regular', fontSize: 16 },

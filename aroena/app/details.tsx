@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, FlatList, Platform } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, FlatList } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { API_URL } from '../api';
 
 const formatMoney = (amount) => amount.toLocaleString('en-RW');
@@ -33,6 +32,13 @@ export default function Details() {
       setLoading(false);
     }
   }, [params.service]);
+
+  const getServiceImageUrl = (imagePath) => {
+    if (!imagePath) return 'https://via.placeholder.com/400x300?text=No+Image';
+    if (imagePath.startsWith('http')) return imagePath;
+    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    return `${API_URL}${cleanPath}`;
+  };
 
 
   const renderStars = (rating) => {
@@ -116,95 +122,99 @@ export default function Details() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <Animatable.View animation="fadeIn" style={styles.imageContainer}>
-          <Image source={{ uri: `${API_URL}${service.image}` }} style={styles.image} />
-          <View style={styles.ratingContainer}>
-            <View style={styles.ratingBadge}>
-              {renderStars(service.rating)}
-              <Text style={styles.ratingText}>{service.rating}</Text>
-            </View>
-          </View>
-        </Animatable.View>
-
-        <Animatable.View animation="fadeInUp" delay={200} style={styles.content}>
-          <View style={styles.titleSection}>
-            <Text style={styles.title}>{service.title}</Text>
-            <View style={styles.priceContainer}>
-              <Text style={styles.price}>{formatMoney(service.price)} Frw</Text>
-              <Text style={styles.priceUnit}>{service.priceUnit}</Text>
-            </View>
-          </View>
-
-          <Text style={styles.description}>{service.description}</Text>
-
-          <View style={styles.categoryContainer}>
-            <Text style={styles.categoryText}>{service.category}</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Features</Text>
-            <View style={styles.featuresContainer}>
-              {service.features.map((feature, index) => (
-                <View key={index} style={styles.featureItem}>
-                  <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                  <Text style={styles.featureText}>{feature}</Text>
+          <Animatable.View animation="fadeIn" style={styles.imageContainer}>
+            <Image source={{ uri: getServiceImageUrl(service.image) }} style={styles.image} />
+            <View style={styles.ratingContainer}>
+              <View style={styles.ratingContainer}>
+                <View style={styles.ratingBadge}>
+                  {renderStars(service.rating)}
+                  <Text style={styles.ratingText}>{service.rating}</Text>
                 </View>
-              ))}
-            </View>
-          </View>
-
-          {!service.available && (
-            <View style={styles.availabilityContainer}>
-              <Ionicons name="warning" size={20} color="#FF4A1C" />
-              <Text style={styles.availabilityText}>Currently Unavailable</Text>
-            </View>
-          )}
-
-          <View style={styles.quantitySection}>
-            <Text style={styles.quantityLabel}>Quantity</Text>
-            <View style={styles.quantitySelector}>
-              <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(Math.max(1, quantity - 1))} disabled={!service.available}>
-                <Ionicons name="remove" size={24} color={service.available ? "#333" : "#999"} />
-              </TouchableOpacity>
-              <View style={styles.quantityDisplay}>
-                <Text style={styles.quantityText}>{quantity}</Text>
               </View>
-              <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(quantity + 1)} disabled={!service.available}>
-                <Ionicons name="add" size={24} color={service.available ? "#333" : "#999"} />
+            </View>
+          </Animatable.View>
+
+          <Animatable.View animation="fadeInUp" delay={200} style={styles.content}>
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>{service.title}</Text>
+              <View style={styles.priceContainer}>
+                <Text style={styles.price}>{formatMoney(service.price)} Frw</Text>
+                <Text style={styles.priceUnit}>{service.priceUnit}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.description}>{service.description}</Text>
+
+            <View style={styles.categoryContainer}>
+              <Text style={styles.categoryText}>{service.category}</Text>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Features</Text>
+              <View style={styles.featuresContainer}>
+                {service.features.map((feature, index) => (
+                  <View key={index} style={styles.featureItem}>
+                    <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                    <Text style={styles.featureText}>{feature}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {!service.available && (
+              <View style={styles.availabilityContainer}>
+                <Ionicons name="warning" size={20} color="#FF4A1C" />
+                <Text style={styles.availabilityText}>Currently Unavailable</Text>
+              </View>
+            )}
+
+            <View style={styles.quantitySection}>
+              <Text style={styles.quantityLabel}>Quantity</Text>
+              <View style={styles.quantitySelector}>
+                <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(Math.max(1, quantity - 1))} disabled={!service.available}>
+                  <Ionicons name="remove" size={24} color={service.available ? "#333" : "#999"} />
+                </TouchableOpacity>
+                <View style={styles.quantityDisplay}>
+                  <Text style={styles.quantityText}>{quantity}</Text>
+                </View>
+                <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(quantity + 1)} disabled={!service.available}>
+                  <Ionicons name="add" size={24} color={service.available ? "#333" : "#999"} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.totalText}>Total: {formatMoney(service.price * quantity)} Frw</Text>
+            </View>
+
+            <View style={styles.dateTimeSection}>
+              <Text style={styles.sectionTitle}>Select Date & Time</Text>
+              <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDateModal(true)} disabled={!service.available}>
+                <Ionicons name="calendar-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
+                <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
+                  {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimeModal(true)} disabled={!service.available}>
+                <Ionicons name="time-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
+                <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
+                  {date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                </Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.totalText}>Total: {formatMoney(service.price * quantity)} Frw</Text>
-          </View>
 
-          <View style={styles.dateTimeSection}>
-            <Text style={styles.sectionTitle}>Select Date & Time</Text>
-            <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDateModal(true)} disabled={!service.available}>
-              <Ionicons name="calendar-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-              <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
-                {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimeModal(true)} disabled={!service.available}>
-              <Ionicons name="time-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-              <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
-                {date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.contactSection}>
-            <Text style={styles.contactTitle}>Need Help?</Text>
-            <View style={styles.contactButtons}>
-              <TouchableOpacity style={styles.contactButton} onPress={handleCall} disabled={!service.available}>
-                <Ionicons name="call" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-                <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>Call Us</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.contactButton} onPress={handleWhatsApp} disabled={!service.available}>
-                <Ionicons name="logo-whatsapp" size={20} color={service.available ? "#25D366" : "#999"} />
-                <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>WhatsApp</Text>
-              </TouchableOpacity>
+            <View style={styles.contactSection}>
+              <Text style={styles.contactTitle}>Need Help?</Text>
+              <View style={styles.contactButtons}>
+                <TouchableOpacity style={styles.contactButton} onPress={handleCall} disabled={!service.available}>
+                  <Ionicons name="call" size={20} color={service.available ? "#FF4A1C" : "#999"} />
+                  <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>Call Us</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.contactButton} onPress={handleWhatsApp} disabled={!service.available}>
+                  <Ionicons name="logo-whatsapp" size={20} color={service.available ? "#25D366" : "#999"} />
+                  <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>WhatsApp</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </Animatable.View>
         </Animatable.View>
       </ScrollView>
 

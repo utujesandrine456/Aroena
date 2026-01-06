@@ -1,80 +1,88 @@
-Aroena Hotel Management System
+🏨 Aroena – Hotel Management System
 
-Aroena is a modern, interactive hotel management system featuring a mobile app for customers and a web admin portal. It allows hotels to manage bookings, staff, and payments efficiently while giving customers a seamless experience for browsing rooms, ordering food, and making payments.
+Aroena is a modern, all-in-one hotel management platform designed to simplify hotel operations while delivering a smooth and enjoyable customer experience.
+It combines a customer mobile app and a powerful web admin portal to manage bookings, staff, payments, and services seamlessly.
 
-🌟 Features
+✨ Why Aroena?
 
-Customer Mobile App:
+🚀 Easy hotel management
+📱 Seamless customer experience
+💳 Secure & fast payments
+📊 Real-time insights & analytics
+🔔 Instant notifications
 
-🏨 Browse hotel rooms & food with images and details
+🌟 Key Features
+📱 Customer Mobile App
 
-📅 Book rooms with date and time selection
+🏨 Browse hotel rooms & food with images and full details
 
-🍔 Order food with quantity selection
+📅 Book rooms with flexible date & time selection
 
-💳 Secure payments via Mobile Money or card
+🍔 Order food with quantity control
 
-🔔 Push notifications & SMS alerts for booking/payment confirmations
+💳 Secure payments via Mobile Money or Card
 
-📖 View all past and upcoming bookings
+🔔 Push notifications & SMS for booking/payment confirmations
 
-Admin Web Portal:
+📖 View past, current, and upcoming bookings
 
-📊 Dashboard with revenue, bookings, and alerts
+🖥️ Admin Web Portal
 
-🛏 Manage rooms: add, edit, delete, set availability, upload images
+📊 Smart dashboard with revenue, bookings & alerts
 
-🍽 Manage food items: add, edit, delete, set availability, upload images
+🛏 Room management (add, edit, delete, availability, images)
 
-👥 Staff management: assign roles and track activities
+🍽 Food management (add, edit, delete, availability, images)
 
-✅ Booking management: confirm, cancel, mark as completed
+👥 Staff management with role assignment & activity tracking
 
-🔔 Notifications for new bookings, payments, and cancellations
+✅ Booking control (confirm, cancel, complete)
 
-Landing Page:
+🔔 Real-time notifications for bookings & payments
 
-🌄 Hero section with hotel images and CTA
+🌍 Landing Page
 
-📌 Featured rooms and food
+🌄 Eye-catching hero section with CTA
 
-🎁 Promotions carousel
+📌 Featured rooms & food highlights
 
-📱 Mobile-friendly and interactive design
+🎁 Promotions & offers carousel
+
+📱 Fully responsive & interactive design
 
 ⚙️ Tech Stack
-
-Mobile App: React Native
-
-Web Admin: React.js + Tailwind CSS
-
-Backend: Node.js + Express
-
-Database: MongoDB
-
-Payments: Mobile Money API / Flutterwave
-
-Notifications: Firebase Cloud Messaging + SMS gateway
-
-Images: Cloudinary
-
+Layer	Technology
+📱 Mobile App	React Native
+🖥 Web Admin	React.js + Tailwind CSS
+🔧 Backend	Node.js + Express
+🗄 Database	MongoDB
+💳 Payments	Mobile Money API / Flutterwave
+🔔 Notifications	Firebase Cloud Messaging + SMS Gateway
+🖼 Image Storage	Cloudinary
 🚀 Getting Started
-
-Clone the repo:
-
+📥 Clone the Repository
 git clone https://github.com/utujesandrine456/Aroena.git
+cd Aroena
 
-
-Install dependencies:
-
+📦 Install Dependencies
 npm install
 
-
-Run the mobile app:
-
+▶️ Run the Mobile App
 expo start
 
-
-Run the web admin portal:
-
+▶️ Run the Web Admin Portal
 npm start
+
+📸 Screenshots (Coming Soon)
+
+Mobile App • Admin Dashboard • Landing Page
+
+🤝 Contributing
+
+Contributions are welcome!
+Feel free to fork the repo, create a feature branch, and submit a pull request 🚀
+
+📬 Contact
+
+Developed with ❤️ by Sandrine
+📧 GitHub: utujesandrine456
