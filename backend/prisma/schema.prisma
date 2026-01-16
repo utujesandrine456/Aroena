@@ -28,8 +28,7 @@ model Service {
   category    String
   price       Float
   rating      Float
-  image              String
-  cloudinaryPublicId String?
+  image       String
   available   Boolean  @default(true)
   features    String[]
   orders      Order[]

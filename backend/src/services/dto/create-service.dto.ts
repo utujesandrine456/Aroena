@@ -7,5 +7,5 @@ export class CreateServiceDto {
   image: string;
   available?: boolean;
   features: string[];
-  cloudinaryPublicId?: string;
+
 }

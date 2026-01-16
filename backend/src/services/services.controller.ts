@@ -50,7 +50,6 @@ export class ServicesController {
             rating: Number(body.rating || 0),
             available: body.available === 'true' || body.available === true,
             image: imageUrl,
-            cloudinaryPublicId: publicId,
         };
 
         if (body.features) {
@@ -164,7 +163,6 @@ export class ServicesController {
         }
 
         data.image = imageUrl;
-        data.cloudinaryPublicId = publicId;
 
         delete (data as any).id;
         Object.keys(data).forEach(key => (data as any)[key] === undefined && delete (data as any)[key]);
