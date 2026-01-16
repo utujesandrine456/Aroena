@@ -1,7 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UploadedFile, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
 import { ServicesService } from './services.service';
-import { CreateServiceDto } from './dto/create-service.dto';
-import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from 'src/auth/admin/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -23,10 +21,25 @@ export class ServicesController {
         @UploadedFile() file: Express.Multer.File,
     ) {
         let imageUrl = body.image || '';
+        let publicId = null;
 
         if (file) {
             const upload = await this.cloudinaryService.uploadImage(file);
             imageUrl = upload.secure_url;
+            publicId = upload.public_id;
+        } else if (imageUrl.startsWith('data:image')) {
+            try {
+                const upload = await new Promise((resolve, reject) => {
+                    require('cloudinary').v2.uploader.upload(imageUrl, (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    });
+                });
+                imageUrl = (upload as any).secure_url;
+                publicId = (upload as any).public_id;
+            } catch (e) {
+                console.error('Failed to upload base64 image to Cloudinary:', e);
+            }
         }
 
         const data: any = {
@@ -37,6 +50,7 @@ export class ServicesController {
             rating: Number(body.rating || 0),
             available: body.available === 'true' || body.available === true,
             image: imageUrl,
+            cloudinaryPublicId: publicId,
         };
 
         if (body.features) {
@@ -77,17 +91,46 @@ export class ServicesController {
     ) {
         const existingService = await this.servicesService.findOne(Number(id));
         if (!existingService) {
-            throw new Error('Service not found');
+            throw new HttpException('Service not found', HttpStatus.NOT_FOUND);
         }
 
-        let imageUrl = body.image || existingService.image;
+        let imageUrl = body.image || (existingService as any).image;
+        let publicId = (existingService as any).cloudinaryPublicId;
 
         if (file) {
+            if ((existingService as any).cloudinaryPublicId) {
+                try {
+                    await this.cloudinaryService.deleteImage((existingService as any).cloudinaryPublicId);
+                } catch (e) {
+                    console.error('Failed to delete old image from Cloudinary:', e);
+                }
+            }
+
             const upload = await this.cloudinaryService.uploadImage(file);
             imageUrl = upload.secure_url;
-        }
+            publicId = upload.public_id;
+        } else if (body.image && body.image.startsWith('data:image')) {
+            if ((existingService as any).cloudinaryPublicId) {
+                try {
+                    await this.cloudinaryService.deleteImage((existingService as any).cloudinaryPublicId);
+                } catch (e) {
+                    console.error('Failed to delete old image from Cloudinary:', e);
+                }
+            }
 
-        const { id: _, category, ...updateData } = body;
+            try {
+                const upload = await new Promise((resolve, reject) => {
+                    require('cloudinary').v2.uploader.upload(body.image, (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    });
+                });
+                imageUrl = (upload as any).secure_url;
+                publicId = (upload as any).public_id;
+            } catch (e) {
+                console.error('Failed to upload base64 image to Cloudinary during update:', e);
+            }
+        }
 
         const data: any = {};
 
@@ -121,6 +164,8 @@ export class ServicesController {
         }
 
         data.image = imageUrl;
+        data.cloudinaryPublicId = publicId;
+
         delete (data as any).id;
         Object.keys(data).forEach(key => (data as any)[key] === undefined && delete (data as any)[key]);
 
@@ -136,6 +181,16 @@ export class ServicesController {
             if (isNaN(serviceId) || serviceId <= 0) {
                 throw new HttpException('Invalid service ID', HttpStatus.BAD_REQUEST);
             }
+
+            const service = await this.servicesService.findOne(serviceId);
+            if ((service as any)?.cloudinaryPublicId) {
+                try {
+                    await this.cloudinaryService.deleteImage((service as any).cloudinaryPublicId);
+                } catch (e) {
+                    console.error('Failed to delete image from Cloudinary during service deletion:', e);
+                }
+            }
+
             return await this.servicesService.delete(serviceId);
         } catch (error: any) {
             if (error instanceof HttpException) {

@@ -10,6 +10,7 @@ export interface Service {
   price: number;
   rating: number;
   image: string;
+  cloudinaryPublicId?: string;
   available: boolean;
   features: string[];
   orders?: { total: number }[]
@@ -217,10 +218,25 @@ class ApiClient {
   }
 
 
-  async updateService(id: number, data: Partial<Service>): Promise<Service> {
-    const { orders, id:_, ...updateData } = data as any;
-    const res = await this.api.put(`/services/${id}`, updateData);
-    
+  async updateService(id: number, data: Partial<Service>, file: File | null = null): Promise<Service> {
+    const formData = new FormData();
+    const { orders, id: _, ...updateData } = data as any;
+
+    Object.entries(updateData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
+
+    if (file) {
+      formData.append('image', file);
+    }
+
+    const res = await this.api.put(`/services/${id}`, formData);
     return res.data;
   }
 

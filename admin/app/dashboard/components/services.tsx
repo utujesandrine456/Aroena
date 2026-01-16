@@ -11,7 +11,7 @@ interface ServicesProps {
 
 export default function ServicesPage({ services: initialServices }: ServicesProps) {
   const [services, setServices] = useState<Service[]>(initialServices);
-  
+
   useEffect(() => {
     setServices(initialServices);
   }, [initialServices]);
@@ -37,7 +37,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     if (!url || url.trim() === '') {
       return PLACEHOLDER_IMAGE;
     }
-    
+
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
@@ -45,11 +45,11 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     if (url.startsWith('data:')) {
       return url;
     }
-    
+
     if (url.includes('cloudinary.com') || url.includes('res.cloudinary.com')) {
       return `https://${url.replace(/^\/+/, '')}`;
     }
-    
+
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
     return `${API_URL}${cleanPath}`;
   };
@@ -57,13 +57,13 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this service? This action cannot be undone.')) return;
-    
+
     setDeletingId(id);
     try {
       await api.deleteService(id);
       const updatedServices = services.filter(s => s.id !== id);
       setServices(updatedServices);
-      
+
       alert('Service deleted successfully!');
       try {
         const refreshedServices = await api.getServices();
@@ -73,9 +73,9 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
       }
     } catch (error: any) {
       console.error('Failed to delete service:', error);
-      
+
       let errorMessage = 'Failed to delete service. Please check your connection and try again.';
-      
+
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error?.message) {
@@ -83,7 +83,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      
+
       alert(`Error: ${errorMessage}`);
     } finally {
       setDeletingId(null);
@@ -94,11 +94,17 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     if (!editingService) return;
     setLoading(true);
     try {
-      const updated = await api.updateService(editingService.id, editingService);
+      const updated = await api.updateService(editingService.id, editingService, selectedFile);
       setServices(services.map(s => s.id === updated.id ? updated : s));
       setEditingService(null);
+      setSelectedFile(null);
+
+      // Refresh to ensure we have latest data (including orders)
+      const refreshed = await api.getServices();
+      setServices(refreshed);
     } catch (error) {
       console.error('Failed to update service:', error);
+      alert('Failed to update service. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -388,6 +394,8 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
         loading={loading}
         handleEdit={handleEdit}
         getImageUrl={getImageUrl}
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
       />}
     </div>
   );
@@ -735,6 +743,8 @@ interface EditServiceModalProps {
   loading: boolean;
   handleEdit: () => Promise<void>;
   getImageUrl: (url: string) => string;
+  selectedFile: File | null;
+  setSelectedFile: (file: File | null) => void;
 }
 
 function EditServiceModal({
@@ -742,7 +752,9 @@ function EditServiceModal({
   setEditingService,
   loading,
   handleEdit,
-  getImageUrl
+  getImageUrl,
+  selectedFile,
+  setSelectedFile
 }: EditServiceModalProps) {
   if (!editingService) return null;
 
@@ -827,11 +839,46 @@ function EditServiceModal({
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Service Image</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#FF4A1C] transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  id="edit-image-upload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedFile(file);
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setEditingService({ ...editingService, image: reader.result as string });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <label htmlFor="edit-image-upload" className="cursor-pointer">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Click to upload a new image</p>
+                      <p className="text-xs text-gray-500">Or edit the URL below</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
               <input
                 type="text"
                 value={editingService.image}
-                onChange={(e) => setEditingService({ ...editingService, image: e.target.value })}
+                onChange={(e) => {
+                  setEditingService({ ...editingService, image: e.target.value });
+                  setSelectedFile(null);
+                }}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF4A1C]/20 focus:border-[#FF4A1C] outline-none transition"
               />
             </div>

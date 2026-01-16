@@ -6,6 +6,9 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.use(require('body-parser').json({ limit: '50mb' }));
+  app.use(require('body-parser').urlencoded({ limit: '50mb', extended: true }));
+
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads',
   });

@@ -1,6 +1,6 @@
 generator client {
-  provider      = "prisma-client-js"
-  engineType    = "library"
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -8,9 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Admin{
-  id Int @id @default(autoincrement())
-  email String @unique
+model Admin {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
   password String
 }
 
@@ -34,23 +34,23 @@ model Service {
   orders      Order[]
 }
 
+model Order {
+  id        Int         @id @default(autoincrement())
+  quantity  Int
+  total     Float
+  date      DateTime
+  serviceId Int
+  userId    Int
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  service   Service     @relation(fields: [serviceId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+}
+
 enum OrderStatus {
   PENDING
   APPROVED
   REJECTED
   PAID
-}
-
-model Order {
-  id        Int      @id @default(autoincrement())
-  quantity  Int
-  total     Float
-  date      DateTime
-  status    OrderStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  service   Service  @relation(fields: [serviceId], references: [id])
-  serviceId Int
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
 }

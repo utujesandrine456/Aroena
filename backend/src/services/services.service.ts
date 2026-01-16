@@ -6,7 +6,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 
 @Injectable()
 export class ServicesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   create(data: CreateServiceDto) {
     return this.prisma.service.create({ data });
@@ -31,46 +31,44 @@ export class ServicesService {
 
   async delete(id: number) {
     try {
-      // Check if service exists first
-      const service = await this.prisma.service.findUnique({
-        where: { id },
-        include: {
-          orders: true,
-        },
-      });
-      
-      if (!service) {
-        throw new NotFoundException('Service not found');
-      }
-      
-      // Check if service has associated orders
-      if (service.orders && service.orders.length > 0) {
-        throw new BadRequestException(
-          `Cannot delete service: It has ${service.orders.length} associated order(s). Please delete or reassign the orders first.`
-        );
-      }
-      
-      // Delete the service
-      return await this.prisma.service.delete({
-        where: { id },
+      // Use a transaction to delete associated orders first, then the service
+      return await this.prisma.$transaction(async (tx) => {
+        // Check if service exists
+        const service = await tx.service.findUnique({
+          where: { id },
+        });
+
+        if (!service) {
+          throw new NotFoundException('Service not found');
+        }
+
+        // Delete all associated orders first
+        await tx.order.deleteMany({
+          where: { serviceId: id },
+        });
+
+        // Finally delete the service
+        return await tx.service.delete({
+          where: { id },
+        });
       });
     } catch (error: any) {
       // If it's already a NestJS exception, re-throw it
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
-      
+
       // Handle Prisma errors
       if (error.code === 'P2003') {
-        throw new BadRequestException('Cannot delete service: It is associated with existing orders');
+        throw new BadRequestException('Cannot delete service: Foreign key constraint fails');
       }
       if (error.code === 'P2025') {
         throw new NotFoundException('Service not found');
       }
-      
+
       // Log the error for debugging
       console.error('Error deleting service:', error);
-      
+
       // For any other error, throw a generic bad request with the error message
       const errorMessage = error?.message || 'Failed to delete service';
       throw new BadRequestException(errorMessage);
