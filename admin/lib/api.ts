@@ -225,8 +225,16 @@ class ApiClient {
   }
 
   async deleteService(id: number): Promise<void> {
-    const res = await this.api.delete(`/services/${id}`);
-    return res.data;
+    try {
+      const res = await this.api.delete(`/services/${id}`);
+      return res.data;
+    } catch (error: any) {
+      // Re-throw with better error message
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete service';
+      const errorToThrow = new Error(errorMessage);
+      (errorToThrow as any).response = error?.response;
+      throw errorToThrow;
+    }
   }
 
 

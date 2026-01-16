@@ -2,6 +2,9 @@ import { Service, api, API_URL } from '@/lib/api';
 import { Star, Tag, Edit, Trash2, Plus, Image as ImageIcon, Grid, Check, X, Loader2 } from 'lucide-react';
 import { useState, FormEvent, useEffect } from 'react';
 
+
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+
 interface ServicesProps {
   services: Service[];
 }
@@ -9,7 +12,6 @@ interface ServicesProps {
 export default function ServicesPage({ services: initialServices }: ServicesProps) {
   const [services, setServices] = useState<Service[]>(initialServices);
   
-  // Sync with parent when props change
   useEffect(() => {
     setServices(initialServices);
   }, [initialServices]);
@@ -33,7 +35,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
 
   const getImageUrl = (url: string | null | undefined) => {
     if (!url || url.trim() === '') {
-      return 'https://via.placeholder.com/400x300?text=No+Image';
+      return PLACEHOLDER_IMAGE;
     }
     
     if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -59,26 +61,30 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     setDeletingId(id);
     try {
       await api.deleteService(id);
-      // Update local state immediately for better UX
       const updatedServices = services.filter(s => s.id !== id);
       setServices(updatedServices);
       
-      // Show success message
       alert('Service deleted successfully!');
-      
-      // Refresh data from server to ensure consistency
       try {
         const refreshedServices = await api.getServices();
         setServices(refreshedServices);
       } catch (refreshError) {
         console.error('Failed to refresh services:', refreshError);
-        // Keep the local state update even if refresh fails
       }
     } catch (error: any) {
       console.error('Failed to delete service:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete service. Please check your connection and try again.';
+      
+      let errorMessage = 'Failed to delete service. Please check your connection and try again.';
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       alert(`Error: ${errorMessage}`);
-      // Don't remove from UI if deletion failed
     } finally {
       setDeletingId(null);
     }
@@ -250,7 +256,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
                     alt={service.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                      (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
                     }}
                   />
                 ) : (
@@ -839,7 +845,7 @@ function EditServiceModal({
                     alt="Preview"
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                      (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
                     }}
                   />
                 </div>
