@@ -110,17 +110,17 @@ export default function BookChoice() {
     if (!imagePath || imagePath.trim() === '') {
       return PLACEHOLDER_IMAGE;
     }
-
-    // If it's already a full URL (http or https) or base64, return as-is
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('data:')) {
+    
+    // If it's already a full URL (http or https), return as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return imagePath;
     }
-
+    
     // If it's a Cloudinary URL without protocol, add https
     if (imagePath.includes('cloudinary.com') || imagePath.includes('res.cloudinary.com')) {
       return `https://${imagePath.replace(/^\/+/, '')}`;
     }
-
+    
     // Otherwise, treat as relative path and prepend API URL
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${API_URL}${cleanPath}`;
@@ -190,8 +190,8 @@ export default function BookChoice() {
           filteredServices.map((service, idx) => (
             <Animatable.View key={service.id} animation="fadeInUp" delay={300 + idx * 100} style={styles.serviceCard}>
               <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: getServiceImageUrl(service.image) }}
+                <Image 
+                  source={{ uri: getServiceImageUrl(service.image) }} 
                   style={styles.serviceImage}
                   onError={(error) => {
                     console.log('Image load error:', error.nativeEvent.error);

@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UploadedFile, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
 import { ServicesService } from './services.service';
+import { CreateServiceDto } from './dto/create-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from 'src/auth/admin/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -20,52 +22,66 @@ export class ServicesController {
         @Body() body: any,
         @UploadedFile() file: Express.Multer.File,
     ) {
-        let imageUrl = body.image || '';
-        let publicId = null;
+        try {
+            let imageUrl = body.image || '';
 
-        if (file) {
-            const upload = await this.cloudinaryService.uploadImage(file);
-            imageUrl = upload.secure_url;
-            publicId = upload.public_id;
-        } else if (imageUrl.startsWith('data:image')) {
-            try {
-                const upload = await new Promise((resolve, reject) => {
-                    require('cloudinary').v2.uploader.upload(imageUrl, (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    });
-                });
-                imageUrl = (upload as any).secure_url;
-                publicId = (upload as any).public_id;
-            } catch (e) {
-                console.error('Failed to upload base64 image to Cloudinary:', e);
+            // Upload to Cloudinary if file is provided
+            if (file) {
+                try {
+                    const upload = await this.cloudinaryService.uploadImage(file);
+                    imageUrl = upload.secure_url;
+                } catch (uploadError: any) {
+                    console.error('Cloudinary upload error:', uploadError);
+                    throw new HttpException(
+                        `Failed to upload image: ${uploadError?.message || 'Unknown error'}`,
+                        HttpStatus.BAD_REQUEST
+                    );
+                }
             }
-        }
 
-        const data: any = {
-            title: body.title,
-            description: body.description,
-            category: body.category,
-            price: Number(body.price),
-            rating: Number(body.rating || 0),
-            available: body.available === 'true' || body.available === true,
-            image: imageUrl,
-        };
+            // Validate required fields
+            if (!body.title || !body.category || !body.price || !body.description) {
+                throw new HttpException(
+                    'Missing required fields: title, category, price, and description are required',
+                    HttpStatus.BAD_REQUEST
+                );
+            }
 
-        if (body.features) {
-            try {
-                data.features = typeof body.features === 'string'
-                    ? JSON.parse(body.features)
-                    : body.features;
-            } catch (e) {
-                console.warn('Failed to parse features JSON in create');
+            const data: any = {
+                title: body.title,
+                description: body.description,
+                category: body.category,
+                price: Number(body.price),
+                rating: Number(body.rating || 0),
+                available: body.available === 'true' || body.available === true,
+                image: imageUrl,
+            };
+
+            // Parse features
+            if (body.features) {
+                try {
+                    data.features = typeof body.features === 'string'
+                        ? JSON.parse(body.features)
+                        : body.features;
+                } catch (e) {
+                    console.warn('Failed to parse features JSON in create');
+                    data.features = [];
+                }
+            } else {
                 data.features = [];
             }
-        } else {
-            data.features = [];
-        }
 
-        return this.servicesService.create(data);
+            return await this.servicesService.create(data);
+        } catch (error: any) {
+            console.error('Error creating service:', error);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException(
+                error?.message || 'Failed to create service',
+                error?.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
 
@@ -88,86 +104,82 @@ export class ServicesController {
         @Body() body: any,
         @UploadedFile() file: Express.Multer.File,
     ) {
-        const existingService = await this.servicesService.findOne(Number(id));
-        if (!existingService) {
-            throw new HttpException('Service not found', HttpStatus.NOT_FOUND);
-        }
+        try {
+            const serviceId = Number(id);
+            if (isNaN(serviceId) || serviceId <= 0) {
+                throw new HttpException('Invalid service ID', HttpStatus.BAD_REQUEST);
+            }
 
-        let imageUrl = body.image || (existingService as any).image;
-        let publicId = (existingService as any).cloudinaryPublicId;
+            const existingService = await this.servicesService.findOne(serviceId);
+            if (!existingService) {
+                throw new HttpException('Service not found', HttpStatus.NOT_FOUND);
+            }
 
-        if (file) {
-            if ((existingService as any).cloudinaryPublicId) {
+            let imageUrl = body.image || existingService.image;
+
+            // Upload new image to Cloudinary if file is provided
+            if (file) {
                 try {
-                    await this.cloudinaryService.deleteImage((existingService as any).cloudinaryPublicId);
-                } catch (e) {
-                    console.error('Failed to delete old image from Cloudinary:', e);
+                    const upload = await this.cloudinaryService.uploadImage(file);
+                    imageUrl = upload.secure_url;
+                    
+                    // Optionally delete old image from Cloudinary if it exists
+                    // (You can extract public_id from existingService.image if needed)
+                } catch (uploadError: any) {
+                    console.error('Cloudinary upload error:', uploadError);
+                    throw new HttpException(
+                        `Failed to upload image: ${uploadError?.message || 'Unknown error'}`,
+                        HttpStatus.BAD_REQUEST
+                    );
                 }
             }
 
-            const upload = await this.cloudinaryService.uploadImage(file);
-            imageUrl = upload.secure_url;
-            publicId = upload.public_id;
-        } else if (body.image && body.image.startsWith('data:image')) {
-            if ((existingService as any).cloudinaryPublicId) {
+            const data: any = {};
+
+            if (body.title !== undefined) data.title = body.title;
+            if (body.description !== undefined) data.description = body.description;
+            if (body.category !== undefined) data.category = body.category;
+
+            if (body.price !== undefined) {
+                const priceNum = Number(body.price);
+                if (!isNaN(priceNum)) data.price = priceNum;
+            }
+
+            if (body.rating !== undefined) {
+                const ratingNum = Number(body.rating);
+                if (!isNaN(ratingNum)) data.rating = ratingNum;
+            }
+
+            if (body.available !== undefined) {
+                data.available = body.available === 'true' || body.available === true;
+            }
+
+            if (body.features !== undefined) {
                 try {
-                    await this.cloudinaryService.deleteImage((existingService as any).cloudinaryPublicId);
+                    data.features = typeof body.features === 'string'
+                        ? JSON.parse(body.features)
+                        : body.features;
                 } catch (e) {
-                    console.error('Failed to delete old image from Cloudinary:', e);
+                    console.warn('Failed to parse features JSON, using as is');
+                    data.features = body.features;
                 }
             }
 
-            try {
-                const upload = await new Promise((resolve, reject) => {
-                    require('cloudinary').v2.uploader.upload(body.image, (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    });
-                });
-                imageUrl = (upload as any).secure_url;
-                publicId = (upload as any).public_id;
-            } catch (e) {
-                console.error('Failed to upload base64 image to Cloudinary during update:', e);
+            data.image = imageUrl;
+            delete (data as any).id;
+            Object.keys(data).forEach(key => (data as any)[key] === undefined && delete (data as any)[key]);
+
+            return await this.servicesService.update(serviceId, data);
+        } catch (error: any) {
+            console.error('Error updating service:', error);
+            if (error instanceof HttpException) {
+                throw error;
             }
+            throw new HttpException(
+                error?.message || 'Failed to update service',
+                error?.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
-
-        const data: any = {};
-
-        if (body.title !== undefined) data.title = body.title;
-        if (body.description !== undefined) data.description = body.description;
-        if (body.category !== undefined) data.category = body.category;
-
-        if (body.price !== undefined) {
-            const priceNum = Number(body.price);
-            if (!isNaN(priceNum)) data.price = priceNum;
-        }
-
-        if (body.rating !== undefined) {
-            const ratingNum = Number(body.rating);
-            if (!isNaN(ratingNum)) data.rating = ratingNum;
-        }
-
-        if (body.available !== undefined) {
-            data.available = body.available === 'true' || body.available === true;
-        }
-
-        if (body.features !== undefined) {
-            try {
-                data.features = typeof body.features === 'string'
-                    ? JSON.parse(body.features)
-                    : body.features;
-            } catch (e) {
-                console.warn('Failed to parse features JSON, using as is');
-                data.features = body.features;
-            }
-        }
-
-        data.image = imageUrl;
-
-        delete (data as any).id;
-        Object.keys(data).forEach(key => (data as any)[key] === undefined && delete (data as any)[key]);
-
-        return this.servicesService.update(Number(id), data);
     }
 
 
@@ -179,16 +191,6 @@ export class ServicesController {
             if (isNaN(serviceId) || serviceId <= 0) {
                 throw new HttpException('Invalid service ID', HttpStatus.BAD_REQUEST);
             }
-
-            const service = await this.servicesService.findOne(serviceId);
-            if ((service as any)?.cloudinaryPublicId) {
-                try {
-                    await this.cloudinaryService.deleteImage((service as any).cloudinaryPublicId);
-                } catch (e) {
-                    console.error('Failed to delete image from Cloudinary during service deletion:', e);
-                }
-            }
-
             return await this.servicesService.delete(serviceId);
         } catch (error: any) {
             if (error instanceof HttpException) {

@@ -11,11 +11,12 @@ interface ServicesProps {
 
 export default function ServicesPage({ services: initialServices }: ServicesProps) {
   const [services, setServices] = useState<Service[]>(initialServices);
-
+  
   useEffect(() => {
     setServices(initialServices);
   }, [initialServices]);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [editingFile, setEditingFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -37,7 +38,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     if (!url || url.trim() === '') {
       return PLACEHOLDER_IMAGE;
     }
-
+    
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
@@ -45,11 +46,11 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     if (url.startsWith('data:')) {
       return url;
     }
-
+    
     if (url.includes('cloudinary.com') || url.includes('res.cloudinary.com')) {
       return `https://${url.replace(/^\/+/, '')}`;
     }
-
+    
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
     return `${API_URL}${cleanPath}`;
   };
@@ -57,13 +58,13 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this service? This action cannot be undone.')) return;
-
+    
     setDeletingId(id);
     try {
       await api.deleteService(id);
       const updatedServices = services.filter(s => s.id !== id);
       setServices(updatedServices);
-
+      
       alert('Service deleted successfully!');
       try {
         const refreshedServices = await api.getServices();
@@ -73,9 +74,9 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
       }
     } catch (error: any) {
       console.error('Failed to delete service:', error);
-
+      
       let errorMessage = 'Failed to delete service. Please check your connection and try again.';
-
+      
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error?.message) {
@@ -83,7 +84,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-
+      
       alert(`Error: ${errorMessage}`);
     } finally {
       setDeletingId(null);
@@ -94,17 +95,20 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     if (!editingService) return;
     setLoading(true);
     try {
-      const updated = await api.updateService(editingService.id, editingService, selectedFile);
+      // If a file is selected, don't send the image URL (let Cloudinary handle it)
+      const serviceData = editingFile 
+        ? { ...editingService, image: '' } 
+        : editingService;
+      
+      const updated = await api.updateService(editingService.id, serviceData, editingFile || null);
       setServices(services.map(s => s.id === updated.id ? updated : s));
       setEditingService(null);
-      setSelectedFile(null);
-
-      // Refresh to ensure we have latest data (including orders)
-      const refreshed = await api.getServices();
-      setServices(refreshed);
-    } catch (error) {
+      setEditingFile(null);
+      alert('Service updated successfully!');
+    } catch (error: any) {
       console.error('Failed to update service:', error);
-      alert('Failed to update service. Please try again.');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update service. Please try again.';
+      alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -116,6 +120,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
     setLoading(true);
 
     try {
+      // If a file is selected, don't send the image URL (let Cloudinary handle it)
       const serviceData = {
         title: formData.title,
         description: formData.description,
@@ -124,7 +129,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
         available: formData.available,
         rating: formData.rating || 0,
         features: formData.features,
-        image: formData.image || '',
+        image: selectedFile ? '' : (formData.image || ''),
       };
 
       const created = await api.createService(serviceData, selectedFile || null);
@@ -132,9 +137,11 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
       setServices([created, ...services]);
       setIsCreating(false);
       resetForm();
-    } catch (err) {
+      alert('Service created successfully!');
+    } catch (err: any) {
       console.error('Failed to create service:', err);
-      alert('Failed to create service. Please check your image URL or try uploading a file.');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to create service. Please check your image URL or try uploading a file.';
+      alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -391,11 +398,11 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
       {editingService && <EditServiceModal
         editingService={editingService}
         setEditingService={setEditingService}
+        editingFile={editingFile}
+        setEditingFile={setEditingFile}
         loading={loading}
         handleEdit={handleEdit}
         getImageUrl={getImageUrl}
-        selectedFile={selectedFile}
-        setSelectedFile={setSelectedFile}
       />}
     </div>
   );
@@ -740,21 +747,21 @@ function CreateServiceModal({
 interface EditServiceModalProps {
   editingService: Service | null;
   setEditingService: (service: Service | null) => void;
+  editingFile: File | null;
+  setEditingFile: (file: File | null) => void;
   loading: boolean;
   handleEdit: () => Promise<void>;
   getImageUrl: (url: string) => string;
-  selectedFile: File | null;
-  setSelectedFile: (file: File | null) => void;
 }
 
 function EditServiceModal({
   editingService,
   setEditingService,
+  editingFile,
+  setEditingFile,
   loading,
   handleEdit,
-  getImageUrl,
-  selectedFile,
-  setSelectedFile
+  getImageUrl
 }: EditServiceModalProps) {
   if (!editingService) return null;
 
@@ -840,7 +847,9 @@ function EditServiceModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Service Image</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#FF4A1C] transition-colors cursor-pointer">
+              
+              {/* File Upload */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#FF4A1C] transition-colors cursor-pointer mb-3">
                 <input
                   type="file"
                   id="edit-image-upload"
@@ -848,7 +857,7 @@ function EditServiceModal({
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      setSelectedFile(file);
+                      setEditingFile(file);
                       const reader = new FileReader();
                       reader.onloadend = () => {
                         setEditingService({ ...editingService, image: reader.result as string });
@@ -862,25 +871,43 @@ function EditServiceModal({
                   <div className="flex flex-col items-center justify-center gap-2">
                     <ImageIcon className="w-8 h-8 text-gray-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Click to upload a new image</p>
-                      <p className="text-xs text-gray-500">Or edit the URL below</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        {editingFile ? 'Change image' : 'Click to upload new image'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
                     </div>
                   </div>
                 </label>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
-              <input
-                type="text"
-                value={editingService.image}
-                onChange={(e) => {
-                  setEditingService({ ...editingService, image: e.target.value });
-                  setSelectedFile(null);
-                }}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF4A1C]/20 focus:border-[#FF4A1C] outline-none transition"
-              />
+              {/* Or URL Input */}
+              <div className="mt-3">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">Or enter URL</span>
+                  </div>
+                </div>
+                <div className="relative mt-3">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <ImageIcon className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={editingService.image}
+                    onChange={(e) => {
+                      setEditingService({ ...editingService, image: e.target.value });
+                      setEditingFile(null);
+                    }}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF4A1C]/20 focus:border-[#FF4A1C] outline-none transition"
+                  />
+                </div>
+              </div>
             </div>
 
             {editingService.image && (
