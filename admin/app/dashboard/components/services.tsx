@@ -1,6 +1,6 @@
 import { Service, api, API_URL } from '@/lib/api';
 import { Star, Tag, Edit, Trash2, Plus, Image as ImageIcon, Grid, Check, X, Loader2 } from 'lucide-react';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 
 interface ServicesProps {
   services: Service[];
@@ -8,9 +8,15 @@ interface ServicesProps {
 
 export default function ServicesPage({ services: initialServices }: ServicesProps) {
   const [services, setServices] = useState<Service[]>(initialServices);
+  
+  // Sync with parent when props change
+  useEffect(() => {
+    setServices(initialServices);
+  }, [initialServices]);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -48,12 +54,33 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
 
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this service?')) return;
+    if (!confirm('Are you sure you want to delete this service? This action cannot be undone.')) return;
+    
+    setDeletingId(id);
     try {
       await api.deleteService(id);
-      setServices(services.filter(s => s.id !== id));
-    } catch (error) {
+      // Update local state immediately for better UX
+      const updatedServices = services.filter(s => s.id !== id);
+      setServices(updatedServices);
+      
+      // Show success message
+      alert('Service deleted successfully!');
+      
+      // Refresh data from server to ensure consistency
+      try {
+        const refreshedServices = await api.getServices();
+        setServices(refreshedServices);
+      } catch (refreshError) {
+        console.error('Failed to refresh services:', refreshError);
+        // Keep the local state update even if refresh fails
+      }
+    } catch (error: any) {
       console.error('Failed to delete service:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete service. Please check your connection and try again.';
+      alert(`Error: ${errorMessage}`);
+      // Don't remove from UI if deletion failed
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -301,10 +328,15 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
                     </button>
                     <button
                       onClick={() => handleDelete(service.id)}
-                      className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                      disabled={deletingId === service.id}
+                      className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete service"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {deletingId === service.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>

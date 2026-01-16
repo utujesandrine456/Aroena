@@ -225,7 +225,8 @@ class ApiClient {
   }
 
   async deleteService(id: number): Promise<void> {
-    await this.api.delete(`/services/${id}`);
+    const res = await this.api.delete(`/services/${id}`);
+    return res.data;
   }
 
 
