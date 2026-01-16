@@ -196,7 +196,7 @@ class ApiClient {
   }
 
 
-  async createService(data: Partial<Service>, file: File) {
+  async createService(data: Partial<Service>, file: File | null) {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
@@ -207,7 +207,10 @@ class ApiClient {
       }
     });
 
-    formData.append('image', file);
+    // Only append file if it exists, otherwise backend will use image URL from body
+    if (file) {
+      formData.append('image', file);
+    }
 
     const res = await this.api.post('/services', formData);
     return res.data;

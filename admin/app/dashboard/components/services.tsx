@@ -1,5 +1,5 @@
 import { Service, api, API_URL } from '@/lib/api';
-import { Star, Tag, DollarSign, Edit, Trash2, Plus, Image as ImageIcon, Grid, Check, X, Loader2 } from 'lucide-react';
+import { Star, Tag, Edit, Trash2, Plus, Image as ImageIcon, Grid, Check, X, Loader2 } from 'lucide-react';
 import { useState, FormEvent } from 'react';
 
 interface ServicesProps {
@@ -25,8 +25,23 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
   const [featureInput, setFeatureInput] = useState('');
   const categories = ['Room', 'Food'];
 
-  const getImageUrl = (url: string) => {
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
+  const getImageUrl = (url: string | null | undefined) => {
+    if (!url || url.trim() === '') {
+      return 'https://via.placeholder.com/400x300?text=No+Image';
+    }
+    
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    if (url.startsWith('data:')) {
+      return url;
+    }
+    
+    if (url.includes('cloudinary.com') || url.includes('res.cloudinary.com')) {
+      return `https://${url.replace(/^\/+/, '')}`;
+    }
+    
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
     return `${API_URL}${cleanPath}`;
   };
@@ -70,15 +85,17 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
         available: formData.available,
         rating: formData.rating || 0,
         features: formData.features,
+        image: formData.image || '',
       };
 
-      const created = await api.createService(serviceData, selectedFile!);
+      const created = await api.createService(serviceData, selectedFile || null);
 
       setServices([created, ...services]);
       setIsCreating(false);
       resetForm();
     } catch (err) {
       console.error('Failed to create service:', err);
+      alert('Failed to create service. Please check your image URL or try uploading a file.');
     } finally {
       setLoading(false);
     }
