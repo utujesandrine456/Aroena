@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UploadedFile, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -130,7 +130,23 @@ export class ServicesController {
 
     @UseGuards(JwtAuthGuard)
     @Delete(':id')
-    delete(@Param('id') id: string) {
-        return this.servicesService.delete(Number(id));
+    async delete(@Param('id') id: string) {
+        try {
+            const serviceId = Number(id);
+            if (isNaN(serviceId) || serviceId <= 0) {
+                throw new HttpException('Invalid service ID', HttpStatus.BAD_REQUEST);
+            }
+            return await this.servicesService.delete(serviceId);
+        } catch (error: any) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            console.error('Unexpected error in delete controller:', error);
+            throw new HttpException(
+                error?.message || 'Internal server error',
+                error?.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

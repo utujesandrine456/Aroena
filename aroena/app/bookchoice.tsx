@@ -102,9 +102,26 @@ export default function BookChoice() {
     router.push(`/details?service=${encodeURIComponent(JSON.stringify(service))}`);
   };
 
-  const getServiceImageUrl = (imagePath: string) => {
-    if (!imagePath) return 'https://placehold.co/400x300?text=No+Image';
-    if (imagePath.startsWith('http')) return imagePath;
+  // Base64 encoded placeholder image (SVG)
+  const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+
+  const getServiceImageUrl = (imagePath: string | null | undefined) => {
+    // Handle null, undefined, or empty strings
+    if (!imagePath || imagePath.trim() === '') {
+      return PLACEHOLDER_IMAGE;
+    }
+    
+    // If it's already a full URL (http or https), return as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // If it's a Cloudinary URL without protocol, add https
+    if (imagePath.includes('cloudinary.com') || imagePath.includes('res.cloudinary.com')) {
+      return `https://${imagePath.replace(/^\/+/, '')}`;
+    }
+    
+    // Otherwise, treat as relative path and prepend API URL
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${API_URL}${cleanPath}`;
   };
@@ -173,7 +190,14 @@ export default function BookChoice() {
           filteredServices.map((service, idx) => (
             <Animatable.View key={service.id} animation="fadeInUp" delay={300 + idx * 100} style={styles.serviceCard}>
               <View style={styles.imageContainer}>
-                <Image source={{ uri: getServiceImageUrl(service.image) }} style={styles.serviceImage} />
+                <Image 
+                  source={{ uri: getServiceImageUrl(service.image) }} 
+                  style={styles.serviceImage}
+                  onError={(error) => {
+                    console.log('Image load error:', error.nativeEvent.error);
+                    console.log('Failed image URL:', service.image);
+                  }}
+                />
                 {!service.available && <View style={styles.unavailableOverlay}><Text style={styles.unavailableText}>Unavailable</Text></View>}
                 <View style={styles.ratingBadge}>{renderStars(service.rating)}<Text style={styles.ratingText}>{service.rating}</Text></View>
                 <TouchableOpacity style={styles.heartButton}><Ionicons name="heart-outline" size={24} color="#fff" /></TouchableOpacity>

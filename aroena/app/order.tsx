@@ -67,7 +67,6 @@ export default function Order() {
   };
 
   const getServiceImageUrl = (imagePath: string) => {
-    if (!imagePath) return 'https://via.placeholder.com/400x300?text=No+Image';
     if (imagePath.startsWith('http')) return imagePath;
     const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
     return `${API_URL}${cleanPath}`;
