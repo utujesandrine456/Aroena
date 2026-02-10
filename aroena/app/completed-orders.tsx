@@ -7,6 +7,7 @@ import * as Animatable from 'react-native-animatable';
 import { useFocusEffect, useRouter } from 'expo-router';
 import SharedBottomNav from '../components/SharedBottomNav';
 
+
 type Order = {
     id: number;
     service: {
@@ -46,9 +47,14 @@ export default function CompletedOrders() {
             const res = await api.get(`/orders/user/${user.id}`);
             const completedOrders = res.data.filter((order: Order) => order.status === 'PAID');
             setOrders(completedOrders);
-        } catch (error) {
-            console.error(error);
-            Alert.alert('Error', 'Failed to fetch orders');
+        } catch (error: any) {
+            if (error.response) {
+                Alert.alert('Server Error', `Status: ${error.response.status}\nMessage: ${JSON.stringify(error.response.data)}`);
+            } else if (error.request) {
+                Alert.alert('Network Error', 'No response received from server. Please check your internet connection.');
+            } else {
+                Alert.alert('Error', error.message);
+            }
         } finally {
             setLoading(false);
             setRefreshing(false);
