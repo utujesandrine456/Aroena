@@ -23,13 +23,13 @@ export class ServicesController {
         @UploadedFile() file: Express.Multer.File,
     ) {
         try {
-            let imageUrl = body.image || '';
+        let imageUrl = body.image || '';
 
             // Upload to Cloudinary if file is provided
-            if (file) {
+        if (file) {
                 try {
-                    const upload = await this.cloudinaryService.uploadImage(file);
-                    imageUrl = upload.secure_url;
+            const upload = await this.cloudinaryService.uploadImage(file);
+            imageUrl = upload.secure_url;
                 } catch (uploadError: any) {
                     console.error('Cloudinary upload error:', uploadError);
                     throw new HttpException(
@@ -45,31 +45,31 @@ export class ServicesController {
                     'Missing required fields: title, category, price, and description are required',
                     HttpStatus.BAD_REQUEST
                 );
-            }
+        }
 
-            const data: any = {
-                title: body.title,
-                description: body.description,
-                category: body.category,
-                price: Number(body.price),
-                rating: Number(body.rating || 0),
-                available: body.available === 'true' || body.available === true,
-                image: imageUrl,
-            };
+        const data: any = {
+            title: body.title,
+            description: body.description,
+            category: body.category,
+            price: Number(body.price),
+            rating: Number(body.rating || 0),
+            available: body.available === 'true' || body.available === true,
+            image: imageUrl,
+        };
 
             // Parse features
-            if (body.features) {
-                try {
-                    data.features = typeof body.features === 'string'
-                        ? JSON.parse(body.features)
-                        : body.features;
-                } catch (e) {
-                    console.warn('Failed to parse features JSON in create');
-                    data.features = [];
-                }
-            } else {
+        if (body.features) {
+            try {
+                data.features = typeof body.features === 'string'
+                    ? JSON.parse(body.features)
+                    : body.features;
+            } catch (e) {
+                console.warn('Failed to parse features JSON in create');
                 data.features = [];
             }
+        } else {
+            data.features = [];
+        }
 
             return await this.servicesService.create(data);
         } catch (error: any) {
@@ -111,17 +111,17 @@ export class ServicesController {
             }
 
             const existingService = await this.servicesService.findOne(serviceId);
-            if (!existingService) {
+        if (!existingService) {
                 throw new HttpException('Service not found', HttpStatus.NOT_FOUND);
-            }
+        }
 
-            let imageUrl = body.image || existingService.image;
+        let imageUrl = body.image || existingService.image;
 
             // Upload new image to Cloudinary if file is provided
-            if (file) {
+        if (file) {
                 try {
-                    const upload = await this.cloudinaryService.uploadImage(file);
-                    imageUrl = upload.secure_url;
+            const upload = await this.cloudinaryService.uploadImage(file);
+            imageUrl = upload.secure_url;
                     
                     // Optionally delete old image from Cloudinary if it exists
                     // (You can extract public_id from existingService.image if needed)
@@ -134,40 +134,40 @@ export class ServicesController {
                 }
             }
 
-            const data: any = {};
+        const data: any = {};
 
-            if (body.title !== undefined) data.title = body.title;
-            if (body.description !== undefined) data.description = body.description;
-            if (body.category !== undefined) data.category = body.category;
+        if (body.title !== undefined) data.title = body.title;
+        if (body.description !== undefined) data.description = body.description;
+        if (body.category !== undefined) data.category = body.category;
 
-            if (body.price !== undefined) {
-                const priceNum = Number(body.price);
-                if (!isNaN(priceNum)) data.price = priceNum;
+        if (body.price !== undefined) {
+            const priceNum = Number(body.price);
+            if (!isNaN(priceNum)) data.price = priceNum;
+        }
+
+        if (body.rating !== undefined) {
+            const ratingNum = Number(body.rating);
+            if (!isNaN(ratingNum)) data.rating = ratingNum;
+        }
+
+        if (body.available !== undefined) {
+            data.available = body.available === 'true' || body.available === true;
+        }
+
+        if (body.features !== undefined) {
+            try {
+                data.features = typeof body.features === 'string'
+                    ? JSON.parse(body.features)
+                    : body.features;
+            } catch (e) {
+                console.warn('Failed to parse features JSON, using as is');
+                data.features = body.features;
             }
+        }
 
-            if (body.rating !== undefined) {
-                const ratingNum = Number(body.rating);
-                if (!isNaN(ratingNum)) data.rating = ratingNum;
-            }
-
-            if (body.available !== undefined) {
-                data.available = body.available === 'true' || body.available === true;
-            }
-
-            if (body.features !== undefined) {
-                try {
-                    data.features = typeof body.features === 'string'
-                        ? JSON.parse(body.features)
-                        : body.features;
-                } catch (e) {
-                    console.warn('Failed to parse features JSON, using as is');
-                    data.features = body.features;
-                }
-            }
-
-            data.image = imageUrl;
-            delete (data as any).id;
-            Object.keys(data).forEach(key => (data as any)[key] === undefined && delete (data as any)[key]);
+        data.image = imageUrl;
+        delete (data as any).id;
+        Object.keys(data).forEach(key => (data as any)[key] === undefined && delete (data as any)[key]);
 
             return await this.servicesService.update(serviceId, data);
         } catch (error: any) {

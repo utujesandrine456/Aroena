@@ -354,7 +354,7 @@ export default function ServicesPage({ services: initialServices }: ServicesProp
                       {deletingId === service.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                       )}
                     </button>
                   </div>
@@ -896,16 +896,16 @@ function EditServiceModal({
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
                     <ImageIcon className="w-5 h-5 text-gray-400" />
                   </div>
-                  <input
-                    type="text"
-                    value={editingService.image}
+              <input
+                type="text"
+                value={editingService.image}
                     onChange={(e) => {
                       setEditingService({ ...editingService, image: e.target.value });
                       setEditingFile(null);
                     }}
                     placeholder="https://example.com/image.jpg"
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF4A1C]/20 focus:border-[#FF4A1C] outline-none transition"
-                  />
+              />
                 </div>
               </div>
             </div>

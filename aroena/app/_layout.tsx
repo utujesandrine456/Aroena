@@ -54,8 +54,15 @@ export default function Layout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{ title: 'Home' }} />
-      <Stack.Screen name="details" options={{ title: 'Home' }} />
+      <Stack.Screen name="index" options={{ title: 'Welcome' }} />
+      <Stack.Screen name="details" options={{ title: 'Details' }} />
+      <Stack.Screen name="order" options={{ title: 'Order' }} />
+      <Stack.Screen name="payment" options={{ title: 'Payment' }} />
+      <Stack.Screen name="success" options={{ title: 'Success' }} />
+      <Stack.Screen name="bookchoice" options={{ title: 'Services' }} />
+      <Stack.Screen name="active-orders" options={{ title: 'Active Order' }} />
+      <Stack.Screen name="completed-orders" options={{ title: 'Completed' }} />
+      <Stack.Screen name="profile" options={{ title: 'Profile' }} />
     </Stack>
   );
 }

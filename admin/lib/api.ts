@@ -209,7 +209,7 @@ class ApiClient {
 
     // Only append file if it exists, otherwise backend will use image URL from body
     if (file) {
-      formData.append('image', file);
+    formData.append('image', file);
     }
 
     const res = await this.api.post('/services', formData);

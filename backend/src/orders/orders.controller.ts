@@ -28,7 +28,19 @@ export class OrdersController {
 
     @Get('user/:userId')
     findAllByUser(@Param('userId') userId: string) {
-        return this.ordersService.findAllByUser(Number(userId));
+        try {
+            const id = Number(userId);
+            if (isNaN(id)) {
+                throw new HttpException('Invalid user ID', HttpStatus.BAD_REQUEST);
+            }
+            return this.ordersService.findAllByUser(id);
+        } catch (error) {
+            console.error('Error fetching user orders:', error);
+            throw new HttpException(
+                error.message || 'Failed to fetch user orders',
+                error.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     @Get(':id')

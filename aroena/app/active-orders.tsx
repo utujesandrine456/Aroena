@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, RefreshControl, Modal, TextInput } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api';
 import * as Animatable from 'react-native-animatable';
-
+import { useRouter, useFocusEffect } from 'expo-router';
+import SharedBottomNav from '../components/SharedBottomNav';
 
 type Order = {
     id: number;
@@ -21,8 +21,7 @@ type Order = {
     date: string;
 };
 
-
-export default function MyOrders() {
+export default function ActiveOrders() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -31,7 +30,6 @@ export default function MyOrders() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [editQuantity, setEditQuantity] = useState('');
     const router = useRouter();
-
 
     const fetchOrders = async () => {
         try {
@@ -43,7 +41,11 @@ export default function MyOrders() {
             const user = JSON.parse(userData);
 
             const res = await api.get(`/orders/user/${user.id}`);
-            setOrders(res.data);
+            // Show all except PAID
+            const activeOrders = res.data.filter(
+                (order: Order) => order.status !== 'PAID'
+            );
+            setOrders(activeOrders);
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Failed to fetch orders');
@@ -71,7 +73,7 @@ export default function MyOrders() {
     const handlePay = (order: Order) => {
         router.push({
             pathname: '/payment',
-            params: { orderId: order.id, amount: order.total }
+            params: { orderId: order.id, amount: order.total },
         });
     };
 
@@ -99,29 +101,22 @@ export default function MyOrders() {
     };
 
     const handleDelete = async (orderId: number) => {
-        Alert.alert(
-            'Cancel Order',
-            'Are you sure you want to cancel this order?',
-            [
-                { text: 'No', style: 'cancel' },
-                {
-                    text: 'Yes, Cancel',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            console.log('Attempting to delete order ID:', orderId);
-                            const response = await api.delete(`/orders/${orderId}`);
-                            console.log('Delete response:', response.status);
-                            setOrders(prev => prev.filter(o => o.id !== orderId));
-                            Alert.alert('Success', 'Order cancelled successfully');
-                        } catch (error: any) {
-                            console.error('Delete error details:', error.response?.data || error.message);
-                            Alert.alert('Error', `Failed to cancel order: ${error.response?.data?.message || error.message}`);
-                        }
+        Alert.alert('Cancel Order', 'Are you sure you want to cancel this order?', [
+            { text: 'No', style: 'cancel' },
+            {
+                text: 'Yes, Cancel',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await api.delete(`/orders/${orderId}`);
+                        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+                        Alert.alert('Success', 'Order cancelled successfully');
+                    } catch (error: any) {
+                        Alert.alert('Error', `Failed to cancel order: ${error.response?.data?.message || error.message}`);
                     }
-                }
-            ]
-        );
+                },
+            },
+        ]);
     };
 
     const handleEditOrder = (order: Order) => {
@@ -139,7 +134,8 @@ export default function MyOrders() {
         }
 
         try {
-            const newTotal = (selectedOrder.total / selectedOrder.quantity) * newQty;
+            const unitPrice = selectedOrder.total / selectedOrder.quantity;
+            const newTotal = unitPrice * newQty;
             await api.put(`/orders/${selectedOrder.id}`, {
                 quantity: newQty,
                 total: newTotal
@@ -161,12 +157,11 @@ export default function MyOrders() {
             case 'APPROVED': return '#4CAF50';
             case 'PENDING': return '#FFC107';
             case 'REJECTED': return '#F44336';
-            case 'PAID': return '#2196F3';
             default: return '#999';
         }
     };
 
-    const renderItem = ({ item, index }: { item: Order, index: number }) => (
+    const renderItem = ({ item, index }: { item: Order; index: number }) => (
         <Animatable.View animation="fadeInUp" delay={index * 100} style={styles.card}>
             <View style={styles.header}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -190,15 +185,24 @@ export default function MyOrders() {
             </View>
 
             <View style={styles.details}>
-                <Text style={styles.detailText}>Quantity: {item.quantity}</Text>
-                <Text style={styles.detailText}>Total: {item.total.toLocaleString()} RWF</Text>
-                <Text style={styles.dateText}>{new Date(item.date).toLocaleDateString()}</Text>
+                <View style={styles.detailRow}>
+                    <Ionicons name="pricetag-outline" size={16} color="#666" />
+                    <Text style={styles.detailText}>Quantity: {item.quantity}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                    <Ionicons name="cash-outline" size={16} color="#666" />
+                    <Text style={styles.detailText}>Total: {item.total.toLocaleString()} RWF</Text>
+                </View>
+                <View style={styles.detailRow}>
+                    <Ionicons name="calendar-outline" size={16} color="#666" />
+                    <Text style={styles.dateText}>{new Date(item.date).toLocaleDateString()}</Text>
+                </View>
             </View>
 
             {item.status === 'APPROVED' && (
                 <TouchableOpacity style={styles.payButton} onPress={() => handlePay(item)}>
+                    <Ionicons name="card-outline" size={18} color="#fff" />
                     <Text style={styles.payButtonText}>Pay Now</Text>
-                    <Ionicons name="card-outline" size={18} color="#fff" style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
             )}
 
@@ -218,9 +222,9 @@ export default function MyOrders() {
             )}
 
             {item.status === 'REJECTED' && (
-                <View style={[styles.rejectedMessage, { marginTop: 15 }]}>
+                <View style={styles.rejectedMessage}>
                     <Ionicons name="information-circle-outline" size={16} color="#d32f2f" />
-                    <Text style={styles.rejectedText}>This order was rejected by admin. You can cancel it to remove it from your list.</Text>
+                    <Text style={styles.rejectedText}>This order was rejected. Please contact support.</Text>
                 </View>
             )}
         </Animatable.View>
@@ -241,7 +245,9 @@ export default function MyOrders() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>My Orders</Text>
+                    <View>
+                        <Text style={styles.title}>Active Order</Text>
+                    </View>
                 </View>
                 <TouchableOpacity
                     onPress={() => router.push('/bookchoice')}
@@ -249,11 +255,7 @@ export default function MyOrders() {
                 >
                     <Ionicons name="add" size={22} color="#fff" />
                 </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={onRefresh}
-                    style={styles.refreshButton}
-                    disabled={refreshing}
-                >
+                <TouchableOpacity onPress={onRefresh} style={styles.refreshButton} disabled={refreshing}>
                     {refreshing ? (
                         <ActivityIndicator size="small" color="#FF4A1C" />
                     ) : (
@@ -266,13 +268,23 @@ export default function MyOrders() {
                 data={orders}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={[styles.listContent, selectedOrders.length > 0 && { paddingBottom: 100 }]}
+                contentContainerStyle={[
+                    styles.listContent,
+                    selectedOrders.length > 0 ? { paddingBottom: 160 } : { paddingBottom: 100 }
+                ]}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="basket-outline" size={60} color="#ccc" />
-                        <Text style={styles.emptyText}>No orders found</Text>
-                    </View>
+                    <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
+                        <Ionicons name="time-outline" size={80} color="#ddd" />
+                        <Text style={styles.emptyTitle}>No Orders</Text>
+                        <Text style={styles.emptyText}>You don't have any pending or approved orders</Text>
+                        <TouchableOpacity
+                            style={styles.browseButton}
+                            onPress={() => router.push('/bookchoice')}
+                        >
+                            <Text style={styles.browseButtonText}>Browse Services</Text>
+                        </TouchableOpacity>
+                    </Animatable.View>
                 }
             />
 
@@ -334,70 +346,83 @@ export default function MyOrders() {
                     </Animatable.View>
                 </View>
             </Modal>
+
+            <SharedBottomNav />
         </View>
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-        paddingTop: 40,
+        backgroundColor: '#f8f9fa',
     },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#f8f9fa',
     },
     topHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        marginBottom: 20,
-    },
-    refreshButton: {
-        padding: 8,
-        backgroundColor: '#fff',
-        borderRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        paddingTop: 60,
+        paddingBottom: 20,
     },
     backButton: {
-        padding: 5,
-        marginRight: 15,
-        backgroundColor: '#FF4A1C',
+        width: 40,
+        height: 40,
         borderRadius: 20,
+        backgroundColor: '#FF4A1C',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
     },
     title: {
         fontFamily: 'Outfit_700Bold',
         fontSize: 24,
         color: '#333',
     },
-    listContent: {
-        padding: 20,
-        paddingBottom: 40,
+    brandName: {
+        fontFamily: 'Satisfy_400Regular',
+        fontSize: 18,
+        color: '#FF4A1C',
+        marginBottom: -5,
     },
-    card: {
+    refreshButton: {
+        padding: 8,
         backgroundColor: '#fff',
-        borderRadius: 15,
-        padding: 15,
-        marginBottom: 15,
+        borderRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
     },
+    listContent: {
+        padding: 20,
+    },
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 18,
+        marginBottom: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 4,
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 15,
+    },
+    checkbox: {
+        marginRight: 12,
     },
     serviceTitle: {
         fontFamily: 'Outfit_500Medium',
@@ -406,64 +431,49 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     statusBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         borderRadius: 20,
     },
     statusText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 11,
         fontFamily: 'Outfit_500Medium',
     },
     details: {
         marginBottom: 15,
     },
+    detailRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
     detailText: {
         fontFamily: 'Outfit_400Regular',
         fontSize: 14,
         color: '#666',
-        marginBottom: 3,
+        marginLeft: 8,
     },
     dateText: {
         fontFamily: 'Outfit_400Regular',
-        fontSize: 12,
+        fontSize: 13,
         color: '#999',
-        marginTop: 5,
+        marginLeft: 8,
     },
     payButton: {
         backgroundColor: '#FF4A1C',
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 12,
-        borderRadius: 10,
+        padding: 14,
+        borderRadius: 12,
+        gap: 8,
     },
     payButtonText: {
         color: '#fff',
         fontFamily: 'Outfit_500Medium',
         fontSize: 16,
-    },
-    rejectedMessage: {
-        marginTop: 5,
-        padding: 10,
-        backgroundColor: '#fee',
-        borderRadius: 8
-    },
-    rejectedText: {
-        color: '#d32f2f',
-        fontSize: 13,
-        fontFamily: 'Outfit_400Regular'
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingTop: 50,
-    },
-    emptyText: {
-        color: '#999',
-        fontFamily: 'Outfit_400Regular',
-        fontSize: 16,
-        marginTop: 10,
+        marginLeft: 8,
     },
     actionRow: {
         flexDirection: 'row',
@@ -471,7 +481,6 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#f0f0f0',
         paddingTop: 12,
-        marginTop: 5,
     },
     editButton: {
         flexDirection: 'row',
@@ -502,22 +511,93 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginLeft: 5,
     },
-    rejecteMessage: {
+    rejectedMessage: {
         marginTop: 12,
-        padding: 12,
+        padding: 10,
         backgroundColor: '#FFF5F5',
-        borderRadius: 10,
+        borderRadius: 8,
         flexDirection: 'row',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#FFEBEB',
     },
-    rejecteText: {
+    rejectedText: {
         color: '#d32f2f',
-        fontSize: 13,
+        fontSize: 12,
         fontFamily: 'Outfit_400Regular',
         marginLeft: 8,
         flex: 1,
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: 80,
+    },
+    emptyTitle: {
+        fontFamily: 'Outfit_700Bold',
+        fontSize: 22,
+        color: '#333',
+        marginTop: 20,
+        marginBottom: 10,
+    },
+    emptyText: {
+        color: '#999',
+        fontFamily: 'Outfit_400Regular',
+        fontSize: 15,
+        textAlign: 'center',
+        marginBottom: 30,
+    },
+    browseButton: {
+        backgroundColor: '#FF4A1C',
+        paddingHorizontal: 30,
+        paddingVertical: 12,
+        borderRadius: 25,
+    },
+    browseButtonText: {
+        color: '#fff',
+        fontFamily: 'Outfit_500Medium',
+        fontSize: 16,
+    },
+    paymentFooter: {
+        position: 'absolute',
+        bottom: 85,
+        left: 20,
+        right: 20,
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+        elevation: 10,
+    },
+    paymentFooterInfo: {
+        flex: 1,
+    },
+    selectedCount: {
+        fontFamily: 'Outfit_400Regular',
+        fontSize: 12,
+        color: '#666',
+    },
+    totalPrice: {
+        fontFamily: 'Outfit_700Bold',
+        fontSize: 18,
+        color: '#333',
+    },
+    paySelectedButton: {
+        backgroundColor: '#FF4A1C',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 12,
+    },
+    paySelectedText: {
+        color: '#fff',
+        fontFamily: 'Outfit_700Bold',
+        fontSize: 16,
     },
     modalOverlay: {
         flex: 1,
@@ -531,7 +611,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 25,
         width: '100%',
-        maxWidth: 400,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.25,
@@ -542,7 +621,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Outfit_700Bold',
         fontSize: 22,
         color: '#333',
-        marginBottom: 8,
+        marginBottom: 5,
     },
     modalSubtitle: {
         fontFamily: 'Outfit_400Regular',
@@ -551,7 +630,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     inputContainer: {
-        marginBottom: 25,
+        marginBottom: 20,
     },
     label: {
         fontFamily: 'Outfit_500Medium',
@@ -572,72 +651,25 @@ const styles = StyleSheet.create({
     modalActions: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
+        gap: 12,
     },
     cancelButton: {
-        paddingHorizontal: 20,
         paddingVertical: 12,
-        marginRight: 10,
+        paddingHorizontal: 20,
     },
     cancelButtonText: {
         fontFamily: 'Outfit_500Medium',
-        fontSize: 16,
         color: '#666',
+        fontSize: 16,
     },
     confirmButton: {
-        paddingHorizontal: 25,
         paddingVertical: 12,
+        paddingHorizontal: 25,
         borderRadius: 12,
     },
     confirmButtonText: {
         fontFamily: 'Outfit_700Bold',
-        fontSize: 16,
         color: '#fff',
-    },
-    checkbox: {
-        marginRight: 10,
-    },
-    paymentFooter: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: '#fff',
-        padding: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 20,
-    },
-    paymentFooterInfo: {
-        flex: 1,
-    },
-    selectedCount: {
-        fontFamily: 'Outfit_400Regular',
-        fontSize: 14,
-        color: '#666',
-    },
-    totalPrice: {
-        fontFamily: 'Outfit_700Bold',
-        fontSize: 18,
-        color: '#333',
-    },
-    paySelectedButton: {
-        backgroundColor: '#FF4A1C',
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: 12,
-    },
-    paySelectedText: {
-        color: '#fff',
-        fontFamily: 'Outfit_700Bold',
         fontSize: 16,
     },
 });

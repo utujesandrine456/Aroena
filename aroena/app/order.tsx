@@ -59,7 +59,7 @@ export default function Order() {
 
       await api.post('/orders', orderData);
       Alert.alert('Success', 'Your order has been placed successfully! Please wait for admin approval.');
-      router.push('/my-orders');
+      router.push('/active-orders');
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Failed to create order. Please try again.');

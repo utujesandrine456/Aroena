@@ -41,17 +41,17 @@ export default function Details() {
     if (!imagePath || imagePath.trim() === '') {
       return PLACEHOLDER_IMAGE;
     }
-    
+
     // If it's already a full URL (http or https), return as-is
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return imagePath;
     }
-    
+
     // If it's a Cloudinary URL without protocol, add https
     if (imagePath.includes('cloudinary.com') || imagePath.includes('res.cloudinary.com')) {
       return `https://${imagePath.replace(/^\/+/, '')}`;
     }
-    
+
     // Otherwise, treat as relative path and prepend API URL
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${API_URL}${cleanPath}`;
@@ -137,109 +137,113 @@ export default function Details() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        style={styles.scrollView}
+      >
+
         <Animatable.View animation="fadeIn" style={styles.imageContainer}>
-          <Animatable.View animation="fadeIn" style={styles.imageContainer}>
-            <Image 
-              source={{ uri: getServiceImageUrl(service.image) }} 
-              style={styles.image}
-              onError={(error) => {
-                console.log('Image load error:', error.nativeEvent.error);
-                console.log('Failed image URL:', service.image);
-              }}
-            />
+          <Image
+            source={{ uri: getServiceImageUrl(service.image) }}
+            style={styles.image}
+            onError={(error) => {
+              console.log('Image load error:', error.nativeEvent.error);
+              console.log('Failed image URL:', service.image);
+            }}
+          />
+          <View style={styles.ratingContainer}>
             <View style={styles.ratingContainer}>
-              <View style={styles.ratingContainer}>
-                <View style={styles.ratingBadge}>
-                  {renderStars(service.rating)}
-                  <Text style={styles.ratingText}>{service.rating}</Text>
-                </View>
+              <View style={styles.ratingBadge}>
+                {renderStars(service.rating)}
+                <Text style={styles.ratingText}>{service.rating}</Text>
               </View>
             </View>
-          </Animatable.View>
-
-          <Animatable.View animation="fadeInUp" delay={200} style={styles.content}>
-            <View style={styles.titleSection}>
-              <Text style={styles.title}>{service.title}</Text>
-              <View style={styles.priceContainer}>
-                <Text style={styles.price}>{formatMoney(service.price)} Frw</Text>
-                <Text style={styles.priceUnit}>{service.priceUnit}</Text>
-              </View>
-            </View>
-
-            <Text style={styles.description}>{service.description}</Text>
-
-            <View style={styles.categoryContainer}>
-              <Text style={styles.categoryText}>{service.category}</Text>
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Features</Text>
-              <View style={styles.featuresContainer}>
-                {service.features.map((feature, index) => (
-                  <View key={index} style={styles.featureItem}>
-                    <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                    <Text style={styles.featureText}>{feature}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {!service.available && (
-              <View style={styles.availabilityContainer}>
-                <Ionicons name="warning" size={20} color="#FF4A1C" />
-                <Text style={styles.availabilityText}>Currently Unavailable</Text>
-              </View>
-            )}
-
-            <View style={styles.quantitySection}>
-              <Text style={styles.quantityLabel}>Quantity</Text>
-              <View style={styles.quantitySelector}>
-                <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(Math.max(1, quantity - 1))} disabled={!service.available}>
-                  <Ionicons name="remove" size={24} color={service.available ? "#333" : "#999"} />
-                </TouchableOpacity>
-                <View style={styles.quantityDisplay}>
-                  <Text style={styles.quantityText}>{quantity}</Text>
-                </View>
-                <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(quantity + 1)} disabled={!service.available}>
-                  <Ionicons name="add" size={24} color={service.available ? "#333" : "#999"} />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.totalText}>Total: {formatMoney(service.price * quantity)} Frw</Text>
-            </View>
-
-            <View style={styles.dateTimeSection}>
-              <Text style={styles.sectionTitle}>Select Date & Time</Text>
-              <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDateModal(true)} disabled={!service.available}>
-                <Ionicons name="calendar-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-                <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
-                  {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimeModal(true)} disabled={!service.available}>
-                <Ionicons name="time-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-                <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
-                  {date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.contactSection}>
-              <Text style={styles.contactTitle}>Need Help?</Text>
-              <View style={styles.contactButtons}>
-                <TouchableOpacity style={styles.contactButton} onPress={handleCall} disabled={!service.available}>
-                  <Ionicons name="call" size={20} color={service.available ? "#FF4A1C" : "#999"} />
-                  <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>Call Us</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.contactButton} onPress={handleWhatsApp} disabled={!service.available}>
-                  <Ionicons name="logo-whatsapp" size={20} color={service.available ? "#25D366" : "#999"} />
-                  <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>WhatsApp</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Animatable.View>
+          </View>
         </Animatable.View>
+
+        <Animatable.View animation="fadeInUp" delay={200} style={styles.content}>
+          <View style={styles.titleSection}>
+            <Text style={styles.title}>{service.title}</Text>
+            <View style={styles.priceContainer}>
+              <Text style={styles.price}>{formatMoney(service.price)} Frw</Text>
+              <Text style={styles.priceUnit}>{service.priceUnit}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.description}>{service.description}</Text>
+
+          <View style={styles.categoryContainer}>
+            <Text style={styles.categoryText}>{service.category}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Features</Text>
+            <View style={styles.featuresContainer}>
+              {service.features.map((feature, index) => (
+                <View key={index} style={styles.featureItem}>
+                  <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                  <Text style={styles.featureText}>{feature}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {!service.available && (
+            <View style={styles.availabilityContainer}>
+              <Ionicons name="warning" size={20} color="#FF4A1C" />
+              <Text style={styles.availabilityText}>Currently Unavailable</Text>
+            </View>
+          )}
+
+          <View style={styles.quantitySection}>
+            <Text style={styles.quantityLabel}>Quantity</Text>
+            <View style={styles.quantitySelector}>
+              <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(Math.max(1, quantity - 1))} disabled={!service.available}>
+                <Ionicons name="remove" size={24} color={service.available ? "#333" : "#999"} />
+              </TouchableOpacity>
+              <View style={styles.quantityDisplay}>
+                <Text style={styles.quantityText}>{quantity}</Text>
+              </View>
+              <TouchableOpacity style={styles.quantityButton} onPress={() => setQuantity(quantity + 1)} disabled={!service.available}>
+                <Ionicons name="add" size={24} color={service.available ? "#333" : "#999"} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.totalText}>Total: {formatMoney(service.price * quantity)} Frw</Text>
+          </View>
+
+          <View style={styles.dateTimeSection}>
+            <Text style={styles.sectionTitle}>Select Date & Time</Text>
+            <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDateModal(true)} disabled={!service.available}>
+              <Ionicons name="calendar-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
+              <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
+                {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimeModal(true)} disabled={!service.available}>
+              <Ionicons name="time-outline" size={20} color={service.available ? "#FF4A1C" : "#999"} />
+              <Text style={[styles.dateTimeText, !service.available && { color: '#999' }]}>
+                {date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.contactSection}>
+            <Text style={styles.contactTitle}>Need Help?</Text>
+            <View style={styles.contactButtons}>
+              <TouchableOpacity style={styles.contactButton} onPress={handleCall} disabled={!service.available}>
+                <Ionicons name="call" size={20} color={service.available ? "#FF4A1C" : "#999"} />
+                <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>Call Us</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.contactButton} onPress={handleWhatsApp} disabled={!service.available}>
+                <Ionicons name="logo-whatsapp" size={20} color={service.available ? "#25D366" : "#999"} />
+                <Text style={[styles.contactText, !service.available && styles.contactTextDisabled]}>WhatsApp</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animatable.View>
+
       </ScrollView>
 
       <Modal visible={showDateModal} animationType="slide" transparent={true}>
@@ -312,7 +316,9 @@ export default function Details() {
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff', marginBlock: 30 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 100 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   loadingText: { fontFamily: 'Outfit_400Regular', fontSize: 16, color: '#666', marginTop: 20 },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 20 },
@@ -328,7 +334,7 @@ const styles = StyleSheet.create({
   ratingContainer: { position: 'absolute', top: 20, left: 20 },
   ratingBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   ratingText: { fontFamily: 'Outfit_500Medium', fontSize: 14, color: '#fff', marginLeft: 6 },
-  content: { padding: 20, paddingBottom: 100 },
+  content: { padding: 20 },
   titleSection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   title: { fontFamily: 'Outfit_700Bold', fontSize: 24, color: '#333', flex: 1, marginRight: 16 },
   priceContainer: { alignItems: 'flex-end', display: 'flex', flexDirection: 'row', paddingTop: 8 },

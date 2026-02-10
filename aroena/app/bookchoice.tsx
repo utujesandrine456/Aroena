@@ -6,6 +6,7 @@ import * as Animatable from 'react-native-animatable';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api, { API_URL } from '../api';
+import SharedBottomNav from '../components/SharedBottomNav';
 
 
 type Service = {
@@ -110,17 +111,17 @@ export default function BookChoice() {
     if (!imagePath || imagePath.trim() === '') {
       return PLACEHOLDER_IMAGE;
     }
-    
+
     // If it's already a full URL (http or https), return as-is
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return imagePath;
     }
-    
+
     // If it's a Cloudinary URL without protocol, add https
     if (imagePath.includes('cloudinary.com') || imagePath.includes('res.cloudinary.com')) {
       return `https://${imagePath.replace(/^\/+/, '')}`;
     }
-    
+
     // Otherwise, treat as relative path and prepend API URL
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${API_URL}${cleanPath}`;
@@ -190,8 +191,8 @@ export default function BookChoice() {
           filteredServices.map((service, idx) => (
             <Animatable.View key={service.id} animation="fadeInUp" delay={300 + idx * 100} style={styles.serviceCard}>
               <View style={styles.imageContainer}>
-                <Image 
-                  source={{ uri: getServiceImageUrl(service.image) }} 
+                <Image
+                  source={{ uri: getServiceImageUrl(service.image) }}
                   style={styles.serviceImage}
                   onError={(error) => {
                     console.log('Image load error:', error.nativeEvent.error);
@@ -232,6 +233,8 @@ export default function BookChoice() {
           </Animatable.View>
         )}
       </ScrollView>
+
+      <SharedBottomNav />
     </View>
   );
 }
@@ -299,5 +302,37 @@ const styles = StyleSheet.create({
   emptyTitle: { color: '#333', fontFamily: 'Outfit_700Bold', fontSize: 24, marginTop: 20, marginBottom: 10 },
   emptyText: { color: '#666', fontFamily: 'Outfit_400Regular', fontSize: 16, textAlign: 'center', marginBottom: 30 },
   resetButton: { backgroundColor: '#f0f0f0', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 15, borderWidth: 1, borderColor: '#d0d0d0' },
-  resetButtonText: { color: '#333', fontFamily: 'Outfit_500Medium', fontSize: 16 }
+  resetButtonText: { color: '#333', fontFamily: 'Outfit_500Medium', fontSize: 16 },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    height: 70,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 20,
+    paddingBottom: 5,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  navItem: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navText: {
+    fontSize: 11,
+    marginTop: 4,
+    color: '#999',
+    fontFamily: 'Outfit_400Regular',
+  },
+  navTextActive: {
+    color: '#FF4A1C',
+    fontFamily: 'Outfit_600SemiBold',
+  },
 });
