@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
         elevation: 20,
         paddingBottom: Platform.OS === 'ios' ? 20 : 10,
         position: 'absolute',
-        bottom: 0,
+        bottom: 24,
         left: 0,
         right: 0,
     },

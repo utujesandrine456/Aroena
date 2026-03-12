@@ -39,7 +39,7 @@ export default function CompletedOrders() {
             const user = JSON.parse(userData);
 
             if (!user || !user.id) {
-                console.warn('User ID not found in storage');
+                Alert.alert('Debug Info', 'User ID not found in storage');
                 setLoading(false);
                 return;
             }
@@ -49,7 +49,7 @@ export default function CompletedOrders() {
             setOrders(completedOrders);
         } catch (error: any) {
             if (error.response) {
-                Alert.alert('Server Error', `Status: ${error.response.status}\nMessage: ${JSON.stringify(error.response.data)}`);
+                console.error('Server Response:', error.response.data);
             } else if (error.request) {
                 Alert.alert('Network Error', 'No response received from server. Please check your internet connection.');
             } else {

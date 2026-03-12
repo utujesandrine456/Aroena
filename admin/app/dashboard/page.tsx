@@ -77,7 +77,11 @@ export default function DashboardPage() {
             { label: 'Services', value: services.length, color: 'border-l-4 border-emerald-500' },
             { 
               label: 'Total Revenue', 
-              value: `${orders.reduce((sum, o) => sum + (o.amount || 0), 0).toLocaleString()} Frw`,
+              // Sum the 'total' field of PAID or APPROVED orders
+              value: `${orders
+                .filter((o) => ['PAID', 'APPROVED'].includes(o.status))
+                .reduce((sum, o) => sum + (o.total || 0), 0)
+                .toLocaleString()} Frw`,
               color: 'border-l-4 border-amber-500'
             },
           ].map((s) => (
