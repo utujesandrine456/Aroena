@@ -2,7 +2,8 @@
 
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, User, Eye, EyeOff, Hotel, Shield, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import { Lock, User, Eye, EyeOff, Shield, Sparkles } from 'lucide-react';
 import { api } from '../lib/api';
 
 
@@ -54,8 +55,15 @@ export default function Home() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Header */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-linear-to-br from-[#FF4A1C] to-orange-600 rounded-2xl shadow-lg mb-4 transform hover:scale-105 transition-transform duration-300">
-            <Hotel className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg mb-4 transform hover:scale-105 transition-transform duration-300 overflow-hidden">
+            <Image
+              src="/logo.png"
+              alt="Aroena Logo"
+              width={80}
+              height={80}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-4xl font-bold bg-linear-to-r from-[#FF4A1C] to-orange-600 bg-clip-text text-transparent mb-2">
             Aroena Admin

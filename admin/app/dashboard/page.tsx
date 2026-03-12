@@ -52,12 +52,9 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Content */}
       <div className="flex-1 p-6 lg:p-8 space-y-8">
-        {/* Header */}
         <Header
           ordersCount={orders.length}
           usersCount={users.length}
@@ -69,7 +66,6 @@ export default function DashboardPage() {
           }}
         />
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: 'Total Orders', value: orders.length, color: 'border-l-4 border-[#FF4A1C]' },
@@ -77,9 +73,8 @@ export default function DashboardPage() {
             { label: 'Services', value: services.length, color: 'border-l-4 border-emerald-500' },
             { 
               label: 'Total Revenue', 
-              // Sum the 'total' field of PAID or APPROVED orders
               value: `${orders
-                .filter((o) => ['PAID', 'APPROVED'].includes(o.status))
+                .filter((o) => ['PAID'].includes(o.status))
                 .reduce((sum, o) => sum + (o.total || 0), 0)
                 .toLocaleString()} Frw`,
               color: 'border-l-4 border-amber-500'
@@ -97,7 +92,6 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Content Section */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           {activeTab === 'orders' && <Orders orders={orders} />}
           {activeTab === 'services' && <Services services={services} />}

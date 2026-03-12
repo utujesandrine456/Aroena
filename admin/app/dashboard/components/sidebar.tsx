@@ -1,5 +1,6 @@
 'use client';
-import { Package, Users as UsersIcon, Utensils, LogOut, Hotel, Shield } from 'lucide-react';
+import Image from 'next/image';
+import { Package, Users as UsersIcon, Utensils, LogOut, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type TabType = 'orders' | 'services' | 'users';
@@ -31,8 +32,15 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       {/* Logo/Brand */}
       <div className="p-6 border-b border-gray-200 bg-linear-to-r from-[#FF4A1C]/5 to-orange-50/50">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-linear-to-br from-[#FF4A1C] to-orange-600 rounded-xl flex items-center justify-center shadow-md">
-            <Hotel className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-md flex items-center justify-center">
+            <Image
+              src="/logo.png"
+              alt="Aroena Logo"
+              width={40}
+              height={40}
+              className="object-contain"
+              priority
+            />
           </div>
           <div>
             <h1 className="text-xl font-bold bg-linear-to-r from-[#FF4A1C] to-orange-600 bg-clip-text text-transparent">
