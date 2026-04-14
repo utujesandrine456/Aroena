@@ -1,14 +1,21 @@
-node_modules
-.git
+# EAS Build exclusions
+node_modules/
+**/node_modules/
+android/
+**/android/
+ios/
+**/ios/
+.expo/
+**/ .expo/
+dist/
+web-build/
+build/
+.git/
 .gitignore
+.easignore
 .env
-dist
-build
-.expo
-.expo-shared
-android
-ios
-*.log
 *.mp4
 *.zip
 *.rar
+*.log
+debug_size.py
