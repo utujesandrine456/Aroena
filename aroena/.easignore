@@ -1,53 +1,14 @@
-# EAS Build exclusions — reduces upload archive size
-
-# Node modules (EAS installs these server-side)
-node_modules/
-
-# Generated native folders (EAS generates these during build)
-/android/
-/ios/
-
-# Expo local cache
-.expo/
-
-# Web build artefacts (not needed for native builds)
-dist/
-web-build/
-
-# Editor / IDE
-.vscode/
-.idea/
-*.iml
-
-# macOS metadata
-.DS_Store
-**/.DS_Store
-
-# Logs
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-*.log
-
-# TypeScript incremental build cache
-*.tsbuildinfo
-
-# Test files / coverage
-__tests__/
-coverage/
-*.test.ts
-*.test.tsx
-*.spec.ts
-*.spec.tsx
-
-# Docs / examples
-README.md
-docs/
-app-example/
-
-# Git
-.git/
+node_modules
+.git
 .gitignore
-
-# Misc
-*.orig
+.env
+dist
+build
+.expo
+.expo-shared
+android
+ios
+*.log
+*.mp4
+*.zip
+*.rar
