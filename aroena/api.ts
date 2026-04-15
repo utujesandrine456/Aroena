@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export const API_URL = 'https://aroena.onrender.com';
+export const API_URL = 'http://192.168.1.6:2009';
 
 const api = axios.create({
     baseURL: API_URL,
