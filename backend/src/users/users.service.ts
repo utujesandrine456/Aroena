@@ -33,13 +33,18 @@ export class UsersService {
     }
 
     async loginOrSignup(data: LoginUserDto) {
-        let user = await this.prisma.user.findUnique({ where: { phone: data.phone }, });
+        try {
+            let user = await this.prisma.user.findUnique({ where: { phone: data.phone }, });
 
-        if (!user) {
-            user = await this.prisma.user.create({ data });
+            if (!user) {
+                user = await this.prisma.user.create({ data });
+            }
+
+            return user;
+        } catch (error) {
+            console.error('Error in loginOrSignup:', error);
+            throw error;
         }
-
-        return user;
     }
 }
 
