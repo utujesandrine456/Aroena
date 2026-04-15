@@ -8,7 +8,7 @@ export class AdminService {
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService
-    ){}
+    ) { }
 
     async createAdmin(email: string, password: string) {
         const hashed = await bcrypt.hash(password, 10);
@@ -18,7 +18,7 @@ export class AdminService {
     }
 
     async login(email: string, password: string) {
-        const admin = await this.prisma.admin.findUnique({ where: { email }});
+        const admin = await this.prisma.admin.findUnique({ where: { email } });
         if (!admin) throw new UnauthorizedException('Invalid credentials');
 
         const valid = await bcrypt.compare(password, admin.password);
@@ -33,14 +33,14 @@ export class AdminService {
     }
 
     async deleteAdmin(id: number) {
-        const admin = await this.prisma.admin.findUnique({ where: { id }});
+        const admin = await this.prisma.admin.findUnique({ where: { id } });
         if (!admin) throw new NotFoundException('Admin not found');
 
-        await this.prisma.admin.delete({ where: { id }});
+        await this.prisma.admin.delete({ where: { id } });
         return { message: 'Admin deleted successfully' };
     }
 
-    async getAllAdmins(){
+    async getAllAdmins() {
         return this.prisma.admin.findMany({
             select: {
                 id: true,

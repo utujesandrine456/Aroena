@@ -6,7 +6,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 
 @Injectable()
 export class ServicesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   create(data: CreateServiceDto) {
     return this.prisma.service.create({ data });
@@ -38,18 +38,18 @@ export class ServicesService {
           orders: true,
         },
       });
-      
+
       if (!service) {
         throw new NotFoundException('Service not found');
       }
-      
+
       // Check if service has associated orders
       if (service.orders && service.orders.length > 0) {
         throw new BadRequestException(
           `Cannot delete service: It has ${service.orders.length} associated order(s). Please delete or reassign the orders first.`
         );
       }
-      
+
       // Delete the service
       return await this.prisma.service.delete({
         where: { id },
@@ -59,7 +59,7 @@ export class ServicesService {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
-      
+
       // Handle Prisma errors
       if (error.code === 'P2003') {
         throw new BadRequestException('Cannot delete service: It is associated with existing orders');
@@ -67,10 +67,10 @@ export class ServicesService {
       if (error.code === 'P2025') {
         throw new NotFoundException('Service not found');
       }
-      
+
       // Log the error for debugging
       console.error('Error deleting service:', error);
-      
+
       // For any other error, throw a generic bad request with the error message
       const errorMessage = error?.message || 'Failed to delete service';
       throw new BadRequestException(errorMessage);

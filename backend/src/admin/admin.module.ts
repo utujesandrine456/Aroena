@@ -6,8 +6,8 @@ import { AuthModule } from 'src/auth/admin/auth.module';
 
 
 @Module({
-  imports: [PrismaModule, AuthModule ],
+  imports: [PrismaModule, AuthModule],
   controllers: [AdminController],
   providers: [AdminService]
 })
-export class AdminModule {}
+export class AdminModule { }
