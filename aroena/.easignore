@@ -18,4 +18,3 @@ build/
 *.zip
 *.rar
 *.log
-debug_size.py
